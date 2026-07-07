@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>History - PIXLECT Studio</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="/logo.png">
+</head>
+<body>
+  <canvas id="bg"></canvas>
+
+  <nav>
+    <span class="logo">PIXLECT Studio</span>
+    <div class="nav-links">
+      <a href="projects.html">Projects</a>
+      <a href="index.html">Home</a>
+      <a href="history.html">History</a>
+      <a href="contact.html">Contact</a>
+    </div>
+    <a class="btn" href="https://github.com/Pixlect-Studio" target="_blank">GitHub →</a>
+  </nav>
+
+  <section class="hero" style="padding-top:40px;">
+    <div>
+      <div class="badge">Studio Timeline</div>
+      <h1>How PIXLECT Started<br>& Where We’re Going</h1>
+      <p>
+        PIXLECT Studio is a game + web-dev group focused on building small but fun experiences.
+        This page summarizes our journey, releases, and the ideas that shaped each project.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="section-tag">Our story</div>
+      <div class="section-title">History & Milestones</div>
+
+      <div class="history-timeline">
+        <div class="t-item">
+          <div class="t-year">2025</div>
+          <h3>From experiments to real games</h3>
+          <p>
+            We started with quick prototypes—learning by building.
+            Early projects helped us improve gameplay loops, UI, and performance.
+          </p>
+        </div>
+
+        <div class="t-item">
+          <div class="t-year">2025 - 2026</div>
+          <h3>More creators, more projects</h3>
+          <p>
+            Our game library grew across multiple genres:
+            reaction games, sims, coding playgrounds, and competitive mini-games.
+          </p>
+        </div>
+
+        <div class="t-item">
+          <div class="t-year">Now</div>
+          <h3>Better UX + cleaner code</h3>
+          <p>
+            We’re standardizing our website look & feel, improving navigation, and preparing
+            future updates for ongoing games and tools.
+          </p>
+        </div>
+      </div>
+
+      <div style="margin-top:26px; display:flex; gap:14px; flex-wrap:wrap;">
+        <a class="btn" href="projects.html">Browse Projects</a>
+        <a class="btn-ghost" href="https://github.com/Pixlect-Studio" target="_blank">Follow on GitHub</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    © 2026 Pixlect Studio · Code is free to use without restrictions (no copying allowed).
+  </footer>
+
+  <script>
+    const canvas = document.getElementById("bg");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const particles = Array.from({ length: 80 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      r: Math.random() * 1.8 + 0.5,
+      o: Math.random() * 0.5 + 0.15
+    }));
+
+    function animate() {
+      requestAnimationFrame(animate);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(99,102,241,${p.o})`;
+        ctx.fill();
+      });
+    }
+
+    animate();
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+  </script>
+</body>
+</html>
+

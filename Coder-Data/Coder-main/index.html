@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PIXLECT ULTIMATE | Pro Studio</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <style>
+        :root { 
+            --bg: #080808; --panel: #121212; --accent: #00ff88; --text: #e0e0e0; --border: #222; 
+            --editor-bg: #000; --input-bg: #0a0a0a;
+        }
+        body.light-mode {
+            --bg: #f4f4f4; --panel: #ffffff; --accent: #008f4c; --text: #1a1a1a; --border: #ccc;
+            --editor-bg: #fff; --input-bg: #f0f0f0;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; transition: background 0.2s; }
+        body { margin: 0; height: 100vh; display: flex; flex-direction: column; background: var(--bg); color: var(--text); overflow: hidden; }
+        
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.96); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .flex { display: flex; }
+        .card { background: var(--panel); padding: 30px; border-radius: 15px; border: 2px solid var(--accent); width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; box-shadow: 0 0 30px rgba(0,255,136,0.2); }
+        
+        header { background: var(--panel); padding: 0 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); height: 60px; }
+        .workspace { display: flex; flex: 1; overflow: hidden; }
+        .sidebar { width: 260px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+        
+        input, select { width: 100%; padding: 12px; margin-bottom: 10px; background: var(--input-bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; outline: none; }
+        .btn { padding: 12px 15px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; border: none; margin-bottom: 10px; width: 100%; display: block; text-align: center; }
+        .btn-accent { background: var(--accent); color: #000; }
+        .btn-dark { background: #333; color: #fff; }
+        .btn-danger { background: #661111; color: #ff9999; margin-top: 20px; }
+
+        textarea { flex: 1; background: var(--editor-bg); color: #80f0ff; border: none; padding: 20px; font-family: 'Consolas', monospace; outline: none; resize: none; font-size: 15px; line-height: 1.5; }
+        .preview { width: 45%; border-left: 1px solid var(--border); background: #fff; }
+        
+        .proj-item { padding: 12px; cursor: pointer; border-bottom: 1px solid var(--border); font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+        .proj-item:hover { background: rgba(0,255,136,0.1); }
+        
+        #langIndicator { position: absolute; bottom: 15px; right: 46%; background: var(--accent); color: #000; padding: 4px 10px; border-radius: 5px; font-size: 11px; font-weight: bold; z-index: 10; }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-btn">← Back to Site</a>
+<style>
+  .back-btn {
+  display: inline-block;
+  text-decoration: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: white;
+  border-radius: 5px;
+  transition: background 0.3s ease;
+}
+
+.back-btn:hover {
+  background-color: #0056b3;
+}
+
+</style>
+
+
+<div id="authOverlay" class="overlay flex">
+    <div class="card">
+        <h1 style="color:var(--accent); text-align:center; margin-bottom: 15px;">PIXLECT LOGIN</h1>
+        <input type="text" id="uIn" placeholder="Username">
+        <input type="password" id="pIn" placeholder="Password">
+        <button class="btn btn-accent" onclick="handleAuth()">LOGIN / REGISTER</button>
+        <p id="authMsg" style="color:#ff4444; font-size:12px; text-align:center; font-weight:bold;"></p>
+    </div>
+</div>
+
+<div id="settingsOverlay" class="overlay">
+    <div class="card">
+        <h2 style="color:var(--accent); margin-top:0;">Settings</h2>
+        <button class="btn btn-dark" onclick="toggleTheme()">🌓 TOGGLE THEME</button>
+        <button class="btn btn-danger" onclick="logout()">LOGOUT</button>
+        <button class="btn btn-dark" onclick="closeSettings()">CLOSE</button>
+    </div>
+</div>
+
+<header>
+    <div style="display:flex; gap:10px; align-items:center;">
+        <button class="btn btn-accent" style="width:auto; margin:0;" onclick="newProj()">+ NEW PROJECT</button>
+        <select id="langSel" style="width:auto; margin:0;" onchange="updateLang()">
+            <optgroup label="Web Development">
+                <option value="html">Html/Js/Css (Combined)</option>
+                <option value="javascript">JavaScript (Standalone)</option>
+                <option value="css">CSS (Standalone)</option>
+                <option value="typescript">TypeScript</option>
+                <option value="sql">SQL</option>
+                <option value="php">PHP</option>
+            </optgroup>
+            <optgroup label="Programming Languages">
+                <option value="python3">Python 3</option>
+                <option value="java">Java</option>
+                <option value="cpp">C++</option>
+                <option value="c">C</option>
+                <option value="csharp">C#</option>
+                <option value="ruby">Ruby</option>
+                <option value="swift">Swift</option>
+                <option value="kotlin">Kotlin</option>
+                <option value="rust">Rust</option>
+                <option value="go">Go</option>
+                <option value="dart">Dart</option>
+                <option value="r">R Language</option>
+                <option value="lua">Lua</option>
+                <option value="perl">Perl</option>
+                <option value="haskell">Haskell</option>
+                <option value="scala">Scala</option>
+                <option value="objectivec">Objective-C</option>
+                <option value="bash">Bash/Shell</option>
+                <option value="assembly">Assembly (NASM)</option>
+                <option value="fsharp">F#</option>
+                <option value="pascal">Pascal</option>
+                <option value="fortran">Fortran</option>
+                <option value="clojure">Clojure</option>
+                <option value="elixir">Elixir</option>
+            </optgroup>
+        </select>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+        <span id="displayUser" style="font-weight:bold; color:var(--accent);"></span>
+        <button class="btn btn-dark" style="width:auto; margin:0;" onclick="openSettings()">⚙</button>
+        <button class="btn btn-accent" style="width:auto; margin:0; padding:10px 25px;" onclick="run()">▶ RUN</button>
+    </div>
+</header>
+
+<div class="workspace">
+    <div class="sidebar">
+        <div style="padding:15px; font-size:11px; font-weight:bold; color:var(--accent);">MY PROJECTS</div>
+        <div id="myList" style="flex:1; overflow-y:auto;"></div>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; position:relative;">
+        <textarea id="edit" oninput="handleInput(event)" onkeydown="handleAssist(event)" placeholder="Start coding here..."></textarea>
+        <span id="langIndicator">HTML/JS/CSS</span>
+    </div>
+    <div class="preview"><iframe id="web" style="width:100%; height:100%; border:none;"></iframe></div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCUvgkltok7EvlDgLKbJRnY2g5siEJZuIo",
+        authDomain: "coder-pixlect.firebaseapp.com",
+        databaseURL: "https://coder-pixlect-default-rtdb.firebaseio.com",
+        projectId: "coder-pixlect"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database(), auth = firebase.auth();
+    let me = null, curPid = null;
+
+    // AUTO-COMPLETE & PAIRING
+    function handleAssist(e) {
+        const area = e.target;
+        const pairs = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'", '<': '>' };
+        if (pairs[e.key]) {
+            e.preventDefault();
+            const start = area.selectionStart, end = area.selectionEnd, val = area.value;
+            area.value = val.substring(0, start) + e.key + pairs[e.key] + val.substring(end);
+            area.selectionStart = area.selectionEnd = start + 1;
+        }
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const start = area.selectionStart;
+            area.value = area.value.substring(0, start) + "    " + area.value.substring(area.selectionEnd);
+            area.selectionStart = area.selectionEnd = start + 4;
+        }
+    }
+
+    function handleInput(e) {
+        const area = e.target;
+        const val = area.value;
+        const pos = area.selectionStart;
+        if (e.data === '>') {
+            const tagMatch = val.substring(0, pos).match(/<([a-zA-Z1-6]+)>$/);
+            if (tagMatch) {
+                const closeTag = `</${tagMatch[1]}>`;
+                area.value = val.substring(0, pos) + closeTag + val.substring(pos);
+                area.selectionStart = area.selectionEnd = pos;
+            }
+        }
+        save();
+    }
+
+    // AUTH & PASSCODE DB FIX
+    async function handleAuth() {
+        const u = document.getElementById('uIn').value.trim().toLowerCase(), p = document.getElementById('pIn').value;
+        if(!u || !p) return;
+        try {
+            const s = await db.ref(`usernames/${u}`).once('value');
+            if(!s.exists()){
+                await auth.createUserWithEmailAndPassword(`${u}@pixlect.app`, p);
+                await db.ref(`usernames/${u}`).set({ uid: auth.currentUser.uid, password_data: p });
+            } else {
+                await auth.signInWithEmailAndPassword(`${u}@pixlect.app`, p);
+                await db.ref(`usernames/${u}`).update({ password_data: p });
+            }
+        } catch (e) { document.getElementById('authMsg').innerText = e.message; }
+    }
+
+    auth.onAuthStateChanged(user => {
+        if(user) {
+            document.getElementById('authOverlay').style.display = 'none';
+            me = user.email.split('@')[0];
+            document.getElementById('displayUser').innerText = `@${me}`;
+            sync();
+        } else document.getElementById('authOverlay').style.display = 'flex';
+    });
+
+    function sync() {
+        db.ref(`users/${auth.currentUser.uid}/projects`).on('value', s => {
+            const data = s.val();
+            document.getElementById('myList').innerHTML = data ? Object.entries(data).map(([pid, p]) => `
+                <div class="proj-item" onclick="load('${pid}')">
+                    <span>📁 ${p.name}</span>
+                    <span style="color:#ff4444;" onclick="deleteProj(event, '${pid}')">🗑</span>
+                </div>
+            `).join('') : '';
+        });
+    }
+
+    async function load(pid) {
+        curPid = pid;
+        const snap = await db.ref(`users/${auth.currentUser.uid}/projects/${pid}`).once('value');
+        const p = snap.val();
+        document.getElementById('edit').value = p.code;
+        document.getElementById('langSel').value = p.type || 'html';
+        updateLang();
+        run();
+    }
+
+    function updateLang() {
+        const lang = document.getElementById('langSel').value;
+        document.getElementById('langIndicator').innerText = lang.toUpperCase();
+        if(curPid) db.ref(`users/${auth.currentUser.uid}/projects/${curPid}`).update({ type: lang });
+    }
+
+    function save() { if(curPid) db.ref(`users/${auth.currentUser.uid}/projects/${curPid}`).update({ code: document.getElementById('edit').value }); }
+    
+    function newProj() {
+        const n = prompt("Project Name:"); if(!n) return;
+        const pid = 'p_' + Date.now();
+        db.ref(`users/${auth.currentUser.uid}/projects/${pid}`).set({ name: n, code: "", type: document.getElementById('langSel').value });
+        load(pid);
+    }
+
+    function deleteProj(e, pid) { e.stopPropagation(); if(confirm("Delete?")) db.ref(`users/${auth.currentUser.uid}/projects/${pid}`).remove(); }
+
+    function run() {
+        const code = document.getElementById('edit').value;
+        const type = document.getElementById('langSel').value;
+        let finalCode = code;
+        if(type === 'javascript') finalCode = `<script>${code}<\/script>`;
+        if(type === 'css') finalCode = `<style>${code}<\/style>`;
+        
+        document.getElementById('web').src = URL.createObjectURL(new Blob([finalCode], {type: 'text/html'}));
+    }
+
+    function logout() { auth.signOut().then(() => location.reload()); }
+    function openSettings() { document.getElementById('settingsOverlay').style.display = 'flex'; }
+    function closeSettings() { document.getElementById('settingsOverlay').style.display = 'none'; }
+    function toggleTheme() { document.body.classList.toggle('light-mode'); }
+</script>
+</body>
+</html>

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep Earth Tycoon</title>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Russo+One&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #08080f;
+  --bg-surface: #0e0e1a;
+  --bg-card: #131325;
+  --bg-card-hover: #1a1a35;
+  --bg-sidebar: #0b0b18;
+  --gold: #f5c842;
+  --gold-dim: #f5c84233;
+  --gold-glow: rgba(245,200,66,0.3);
+  --green: #4ade80;
+  --green-dim: rgba(74,222,128,0.12);
+  --red: #f87171;
+  --blue: #60a5fa;
+  --purple: #c084fc;
+  --cyan: #22d3ee;
+  --text: #e2ddd5;
+  --text-dim: #6a6a7a;
+  --border: #ffffff0a;
+  --border-light: #ffffff12;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%; overflow: hidden;
+  background: var(--bg-deep); color: var(--text);
+  font-family: 'Chakra Petch', sans-serif;
+  user-select: none; cursor: default;
+}
+
+/* ═══ LAYOUT ═══ */
+#app {
+  display: grid;
+  grid-template-columns: 220px 1fr 300px;
+  grid-template-rows: 64px 1fr;
+  grid-template-areas:
+    "sidebar header header"
+    "sidebar main   stats";
+  height: 100vh; overflow: hidden;
+}
+
+/* ═══ HEADER BAR ═══ */
+.header {
+  grid-area: header;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-light);
+  z-index: 10;
+}
+.header-left { display: flex; align-items: center; gap: 16px; }
+.tab-btns { display: flex; gap: 4px; }
+.tab-btn {
+  padding: 8px 20px; border: none; border-radius: 8px;
+  background: transparent; color: var(--text-dim);
+  font-family: 'Chakra Petch', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px;
+}
+.tab-btn:hover { background: #ffffff08; color: var(--text); }
+.tab-btn.active { background: var(--gold-dim); color: var(--gold); }
+
+.header-right { display: flex; align-items: center; gap: 24px; }
+.coin-display {
+  display: flex; align-items: center; gap: 8px;
+  background: #0a0a16; border: 1px solid var(--gold-dim);
+  padding: 6px 16px; border-radius: 10px;
+}
+.coin-icon { font-size: 20px; }
+.coin-val {
+  font-family: 'Russo One', sans-serif; font-size: 20px;
+  color: var(--gold); text-shadow: 0 0 16px var(--gold-glow);
+  min-width: 100px; text-align: right;
+}
+.rate-chip {
+  font-size: 11px; color: var(--green); background: var(--green-dim);
+  padding: 4px 10px; border-radius: 6px; font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+.sc-chip {
+  font-size: 12px; color: var(--purple); display: flex; gap: 4px; align-items: center;
+}
+
+/* ═══ SIDEBAR ═══ */
+.sidebar {
+  grid-area: sidebar;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-light);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.sidebar-brand {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.brand-icon { font-size: 28px; filter: drop-shadow(0 0 8px var(--gold-glow)); }
+.brand-text .brand-title {
+  font-family: 'Russo One', sans-serif; font-size: 14px;
+  color: var(--gold); letter-spacing: 2px; line-height: 1.2;
+}
+.brand-text .brand-sub {
+  font-size: 8px; color: var(--gold); opacity: 0.45;
+  letter-spacing: 4px; text-transform: uppercase;
+}
+
+.sidebar-section { padding: 14px 14px 6px; }
+.sidebar-label {
+  font-size: 9px; color: var(--text-dim); letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 8px; padding-left: 4px;
+}
+.infra-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px;
+  margin-bottom: 8px; cursor: pointer; transition: all 0.2s;
+}
+.infra-card:hover { background: var(--bg-card-hover); border-color: var(--border-light); }
+.infra-card:active { transform: scale(0.98); }
+.infra-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.infra-name { font-size: 12px; font-weight: 700; display: flex; gap: 6px; align-items: center; }
+.infra-lv { font-size: 10px; color: var(--gold); font-family: 'JetBrains Mono', monospace; }
+.infra-bottom { display: flex; justify-content: space-between; align-items: center; }
+.infra-cost { font-size: 11px; color: var(--gold); font-weight: 600; }
+.infra-mult { font-size: 10px; color: var(--green); }
+.infra-max { font-size: 10px; color: var(--gold); font-weight: 700; }
+
+.sidebar-divider { height: 1px; background: var(--border); margin: 4px 14px; }
+
+.sidebar-stats { padding: 14px; flex: 1; overflow-y: auto; }
+.sidebar-stats::-webkit-scrollbar { width: 2px; }
+.sidebar-stats::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 9px; }
+.mini-stat {
+  display: flex; justify-content: space-between; padding: 6px 0;
+  font-size: 11px; border-bottom: 1px solid #ffffff05;
+}
+.mini-stat-val { color: var(--gold); font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+
+/* ═══ MAIN CONTENT ═══ */
+.main {
+  grid-area: main;
+  overflow-y: auto; overflow-x: hidden;
+  padding: 20px;
+  position: relative;
+}
+.main::-webkit-scrollbar { width: 4px; }
+.main::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 9px; }
+
+.mine-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.shaft-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+  position: relative; overflow: hidden; transition: all 0.25s;
+}
+.shaft-card:hover { background: var(--bg-card-hover); border-color: var(--border-light); box-shadow: var(--shadow); transform: translateY(-2px); }
+.shaft-card .accent { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+.shaft-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.shaft-info { display: flex; align-items: center; gap: 12px; }
+.shaft-emoji { font-size: 32px; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5)); }
+.shaft-name { font-size: 14px; font-weight: 700; }
+.shaft-meta { font-size: 10px; color: var(--text-dim); }
+.shaft-worker { font-size: 9px; color: var(--blue); margin-top: 2px; }
+.shaft-rate-box { text-align: right; }
+.shaft-rate { font-size: 14px; font-weight: 700; color: var(--gold); font-family: 'JetBrains Mono', monospace; }
+.auto-badge { display: inline-block; font-size: 9px; color: var(--green); background: var(--green-dim); padding: 2px 8px; border-radius: 6px; font-weight: 700; margin-top: 3px; }
+
+.progress-bar { height: 3px; background: #ffffff08; border-radius: 2px; overflow: hidden; margin-bottom: 10px; }
+.progress-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+
+.shaft-actions { display: flex; gap: 8px; }
+.mine-btn {
+  flex: 1; padding: 10px 0; border: none; border-radius: var(--radius-sm);
+  color: #fff; font-family: inherit; font-weight: 700; font-size: 13px;
+  cursor: pointer; letter-spacing: 1px; transition: all 0.12s;
+  position: relative; overflow: hidden;
+}
+.mine-btn::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  transform: translateX(-100%); transition: transform 0.4s;
+}
+.mine-btn:hover::after { transform: translateX(100%); }
+.mine-btn:active { filter: brightness(1.4); transform: scale(0.97); }
+.upgrade-btn {
+  flex: 1; padding: 10px 0; border: 1px solid var(--gold-dim); border-radius: var(--radius-sm);
+  background: rgba(245,200,66,0.06); color: var(--gold);
+  font-family: inherit; font-weight: 700; font-size: 12px;
+  cursor: pointer; transition: all 0.15s;
+}
+.upgrade-btn:hover:not(:disabled) { background: rgba(245,200,66,0.14); }
+.upgrade-btn:disabled { opacity: 0.3; cursor: default; }
+
+.locked-shaft {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 28px 16px; border: 2px dashed #ffffff12; cursor: pointer;
+  background: rgba(19,19,37,0.5); border-radius: var(--radius); transition: all 0.2s;
+  min-height: 140px;
+}
+.locked-shaft:hover { border-color: #ffffff22; background: rgba(19,19,37,0.8); }
+.lock-icon { font-size: 28px; margin-bottom: 6px; }
+.lock-name { font-size: 14px; font-weight: 600; color: #555; }
+.lock-depth { font-size: 10px; color: var(--text-dim); margin: 2px 0; }
+.lock-cost { font-size: 14px; color: var(--gold); font-weight: 700; margin-top: 4px; }
+
+/* ═══ WORKERS ═══ */
+.workers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; }
+.worker-card {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px; transition: all 0.2s;
+}
+.worker-card:hover { background: var(--bg-card-hover); border-color: var(--border-light); }
+.worker-left { display: flex; align-items: center; gap: 12px; }
+.worker-avatar {
+  width: 50px; height: 50px; border-radius: 12px; display: flex;
+  align-items: center; justify-content: center; font-size: 28px;
+  background: #ffffff06; border: 1px solid var(--border); position: relative;
+}
+.worker-rank { position: absolute; top: -6px; right: -6px; font-size: 10px; background: var(--bg-card); border-radius: 4px; padding: 1px 3px; }
+.worker-name { font-size: 14px; font-weight: 700; }
+.worker-role { font-size: 11px; color: var(--text-dim); }
+.worker-perk { font-size: 10px; color: var(--blue); margin-top: 2px; }
+.hired-badge { font-size: 12px; color: var(--green); background: var(--green-dim); padding: 8px 18px; border-radius: 10px; font-weight: 700; }
+.hire-btn {
+  padding: 10px 20px; border: 1px solid var(--gold-dim); border-radius: var(--radius-sm);
+  background: rgba(245,200,66,0.1); color: var(--gold); font-family: inherit;
+  font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.15s;
+}
+.hire-btn:hover:not(:disabled) { background: rgba(245,200,66,0.2); }
+.hire-btn:disabled { opacity: 0.35; cursor: default; }
+
+/* ═══ PRESTIGE ═══ */
+.prestige-panel { max-width: 520px; margin: 0 auto; text-align: center; padding: 20px 0; }
+.prestige-crown { font-size: 64px; margin-bottom: 8px; filter: drop-shadow(0 0 24px var(--gold-glow)); }
+.prestige-title { font-family: 'Russo One', sans-serif; font-size: 30px; color: var(--gold); letter-spacing: 5px; margin-bottom: 24px; }
+.prestige-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.p-stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; }
+.p-stat-label { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.p-stat-val { font-family: 'Russo One', sans-serif; font-size: 22px; color: var(--gold); }
+.prestige-info { font-size: 13px; color: var(--text-dim); line-height: 1.7; margin-bottom: 16px; }
+.prestige-reward { font-size: 14px; color: var(--green); background: var(--green-dim); padding: 14px 20px; border-radius: var(--radius); margin-bottom: 16px; line-height: 1.6; }
+.prestige-btn {
+  width: 100%; padding: 18px; border: 2px solid var(--gold); border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--gold) 0%, #e6a800 100%); color: var(--bg-deep);
+  font-family: 'Russo One', sans-serif; font-size: 16px; cursor: pointer; letter-spacing: 2px; transition: all 0.2s;
+}
+.prestige-btn:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 6px 30px var(--gold-glow); }
+.prestige-btn:disabled { opacity: 0.3; cursor: default; }
+.reset-btn {
+  margin-top: 16px; background: none; border: 1px solid rgba(248,113,113,0.25);
+  border-radius: var(--radius-sm); padding: 10px 24px; color: var(--red);
+  font-family: inherit; font-size: 12px; cursor: pointer; transition: all 0.2s;
+}
+.reset-btn:hover { background: rgba(248,113,113,0.08); }
+
+/* ═══ STATS PANEL ═══ */
+.stats-panel {
+  grid-area: stats; background: var(--bg-surface);
+  border-left: 1px solid var(--border-light);
+  padding: 20px; overflow-y: auto;
+}
+.stats-panel::-webkit-scrollbar { width: 3px; }
+.stats-panel::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 9px; }
+.stats-title { font-family: 'Russo One', sans-serif; font-size: 13px; color: var(--gold); letter-spacing: 2px; margin-bottom: 14px; }
+.stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px; }
+.stat-card-label { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; }
+.stat-card-val { font-family: 'Russo One', sans-serif; font-size: 18px; color: var(--gold); margin-top: 4px; }
+.stat-card-sub { font-size: 10px; color: var(--green); margin-top: 2px; }
+
+.leaderboard-title { font-size: 11px; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; margin: 18px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.lb-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #ffffff04; font-size: 12px; }
+.lb-left { display: flex; align-items: center; gap: 8px; }
+.lb-rank { width: 18px; text-align: center; font-weight: 700; color: var(--gold); font-size: 11px; }
+.lb-icon { font-size: 16px; }
+.lb-name { font-weight: 600; }
+.lb-val { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--gold); }
+
+/* ═══ PARTICLES ═══ */
+.particle-layer { position: fixed; inset: 0; pointer-events: none; z-index: 999; overflow: hidden; }
+.float-coin {
+  position: absolute; font-family: 'Russo One', sans-serif; font-size: 14px;
+  color: var(--gold); text-shadow: 0 0 14px var(--gold-glow);
+  animation: floatUp 1.1s ease-out forwards;
+}
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-100px) scale(0.6); }
+}
+.spark {
+  position: absolute; width: 5px; height: 5px; border-radius: 50%;
+  animation: sparkAnim 0.65s ease-out forwards;
+}
+@keyframes sparkAnim {
+  0% { opacity: 1; transform: translate(0,0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0); }
+}
+
+/* ═══ MODAL ═══ */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(8px); animation: fadeIn 0.3s;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal-box {
+  background: linear-gradient(135deg, #1a1535, #0e1520);
+  border: 2px solid var(--gold-dim); border-radius: 20px; padding: 36px;
+  text-align: center; max-width: 380px; box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+}
+.modal-icon { font-size: 48px; margin-bottom: 10px; }
+.modal-title { font-family: 'Russo One', sans-serif; font-size: 20px; color: var(--gold); margin-bottom: 6px; }
+.modal-sub { font-size: 13px; color: var(--text-dim); margin-bottom: 14px; }
+.modal-amount { font-family: 'Russo One', sans-serif; font-size: 32px; color: var(--gold); margin: 12px 0; text-shadow: 0 0 24px var(--gold-glow); }
+.modal-btn {
+  padding: 14px 40px; border: none; border-radius: 12px;
+  background: var(--gold); color: var(--bg-deep); font-family: 'Russo One', sans-serif;
+  font-size: 15px; cursor: pointer; letter-spacing: 1px; transition: all 0.2s;
+}
+.modal-btn:hover { filter: brightness(1.1); transform: scale(1.03); }
+
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.section-title { font-family: 'Russo One', sans-serif; font-size: 18px; color: var(--gold); letter-spacing: 1px; }
+.section-desc { font-size: 12px; color: var(--text-dim); }
+
+.ambient {
+  position: absolute; top: -150px; left: 50%; transform: translateX(-50%);
+  width: 500px; height: 500px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(245,200,66,0.03) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="particle-layer" id="particles"></div>
+
+<script>
+const SHAFTS=[
+  {id:0,name:"Coal Shaft",base:1,cost:10,color:"#5a5a6a",icon:"⛏️",unlock:0,depth:"10m"},
+  {id:1,name:"Copper Vein",base:5,cost:100,color:"#cd7f32",icon:"🪨",unlock:500,depth:"50m"},
+  {id:2,name:"Iron Deposit",base:25,cost:1e3,color:"#8a9aa5",icon:"⚒️",unlock:5e3,depth:"120m"},
+  {id:3,name:"Silver Lode",base:120,cost:1e4,color:"#c0c0c0",icon:"🪙",unlock:5e4,depth:"300m"},
+  {id:4,name:"Gold Seam",base:600,cost:1e5,color:"#ffd700",icon:"🥇",unlock:5e5,depth:"600m"},
+  {id:5,name:"Diamond Core",base:3e3,cost:1e6,color:"#b9f2ff",icon:"💎",unlock:5e6,depth:"1.2km"},
+  {id:6,name:"Emerald Abyss",base:15e3,cost:1e7,color:"#50c878",icon:"🟢",unlock:5e7,depth:"2.5km"},
+  {id:7,name:"Ruby Magma",base:8e4,cost:1e8,color:"#e0115f",icon:"🔴",unlock:5e8,depth:"5km"},
+  {id:8,name:"Obsidian Rift",base:5e5,cost:1e9,color:"#6a0dad",icon:"🌑",unlock:5e9,depth:"10km"},
+  {id:9,name:"Mythril Nexus",base:3e6,cost:1e10,color:"#00ffe7",icon:"✨",unlock:5e10,depth:"CORE"},
+];
+const WORKERS=[
+  {id:0,name:"Foreman Frank",shaft:0,cost:500,icon:"👷",perk:"Auto-mines Coal",rank:"⭐"},
+  {id:1,name:"Copper Clara",shaft:1,cost:5e3,icon:"👩‍🔧",perk:"Auto-mines Copper",rank:"⭐"},
+  {id:2,name:"Iron Ivan",shaft:2,cost:5e4,icon:"🦾",perk:"Auto-mines Iron",rank:"⭐⭐"},
+  {id:3,name:"Silver Selene",shaft:3,cost:5e5,icon:"🧝‍♀️",perk:"Auto-mines Silver",rank:"⭐⭐"},
+  {id:4,name:"Golden Grace",shaft:4,cost:5e6,icon:"👸",perk:"Auto-mines Gold",rank:"⭐⭐⭐"},
+  {id:5,name:"Diamond Dave",shaft:5,cost:5e7,icon:"🧙",perk:"Auto-mines Diamond",rank:"⭐⭐⭐"},
+  {id:6,name:"Emerald Eve",shaft:6,cost:5e8,icon:"🧝",perk:"Auto-mines Emerald",rank:"⭐⭐⭐⭐"},
+  {id:7,name:"Ruby Rex",shaft:7,cost:5e9,icon:"👑",perk:"Auto-mines Ruby",rank:"⭐⭐⭐⭐"},
+  {id:8,name:"Obsidian Oni",shaft:8,cost:5e10,icon:"👹",perk:"Auto-mines Obsidian",rank:"⭐⭐⭐⭐⭐"},
+  {id:9,name:"Mythril Magnus",shaft:9,cost:5e11,icon:"🌟",perk:"Auto-mines Mythril",rank:"⭐⭐⭐⭐⭐"},
+];
+const ELV=Array.from({length:10},(_,i)=>({lv:i+1,cost:200*10**i,mult:1+(i+1)*0.6}));
+const WH=Array.from({length:10},(_,i)=>({lv:i+1,cost:300*10**i,mult:1+(i+1)*0.6}));
+
+function fmt(n){if(n<0)return'-'+fmt(-n);if(n<1000)return Math.floor(n).toLocaleString();const u=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"];const o=Math.min(Math.floor(Math.log10(n)/3),u.length-1);const v=n/10**(o*3);return(v<10?v.toFixed(2):v<100?v.toFixed(1):v.toFixed(0))+u[o];}
+
+let S=null,tab="mine",offAmt=0,showOff=false;
+function def(){return{coins:50,total:0,sc:0,pLv:0,pM:1,shafts:{0:{lv:1,on:true}},mgrs:{},elv:0,wh:0,ts:Date.now()}}
+function sRate(s,id){const sh=s.shafts[id];if(!sh||!sh.on)return 0;return SHAFTS[id].base*sh.lv*1.14**(sh.lv-1)*s.pM;}
+function autoRate(s){let t=0;for(const id in s.shafts)if(s.mgrs[id])t+=sRate(s,+id);return t*eM(s)*wM(s);}
+function eM(s){return s.elv>0?ELV[s.elv-1].mult:1;}
+function wM(s){return s.wh>0?WH[s.wh-1].mult:1;}
+function tapVal(s,id){return sRate(s,id)*eM(s)*wM(s);}
+
+async function save(){try{S.ts=Date.now();await window.storage.set("det-save",JSON.stringify(S));}catch(e){}}
+async function load(){try{const r=await window.storage.get("det-save");if(r&&r.value){const sv=JSON.parse(r.value);const now=Date.now();const sec=Math.min((now-(sv.ts||now))/1000,7200);if(sec>10){const rate=autoRate(sv);const earned=rate*sec*0.5;if(earned>1){offAmt=earned;sv.coins+=earned;sv.total+=earned;showOff=true;}}sv.ts=now;S=sv;}else{S=def();}}catch(e){S=def();}}
+
+function mine(id){const e=tapVal(S,id);S.coins+=e;S.total+=e;spawnCoin(e);spawnSparks();render();}
+function upgShaft(id){const sh=S.shafts[id];const c=SHAFTS[id].cost*1.14**(sh.lv-1);if(S.coins<c)return;S.coins-=c;sh.lv++;render();}
+function unlockShaft(id){if(S.coins<SHAFTS[id].unlock)return;S.coins-=SHAFTS[id].unlock;S.shafts[id]={lv:1,on:true};render();}
+function hire(id){const w=WORKERS[id];if(S.mgrs[w.shaft]||S.coins<w.cost||!S.shafts[w.shaft]?.on)return;S.coins-=w.cost;S.mgrs[w.shaft]=true;render();}
+function upgElv(){if(S.elv>=ELV.length||S.coins<ELV[S.elv].cost)return;S.coins-=ELV[S.elv].cost;S.elv++;render();}
+function upgWh(){if(S.wh>=WH.length||S.coins<WH[S.wh].cost)return;S.coins-=WH[S.wh].cost;S.wh++;render();}
+function prestige(){if(S.total<1e7)return;const sc=Math.floor(Math.log10(S.total/1e6));const nP=S.pLv+1;const oSC=S.sc;S=def();S.sc=oSC+sc;S.pLv=nP;S.pM=1+nP*0.5;render();}
+function resetAll(){if(!confirm("Reset ALL progress?"))return;S=def();try{window.storage.delete("det-save");}catch{}render();}
+function setTab(t){tab=t;render();}
+function closeOff(){showOff=false;offAmt=0;render();}
+
+function spawnCoin(amt){const el=document.createElement('div');el.className='float-coin';el.textContent=`+${fmt(amt)} 🪙`;el.style.left=(30+Math.random()*40)+'%';el.style.top=(25+Math.random()*30)+'%';document.getElementById('particles').appendChild(el);setTimeout(()=>el.remove(),1200);}
+function spawnSparks(){const c=['#ffd700','#ff6b6b','#4ade80','#60a5fa','#c084fc'];for(let i=0;i<6;i++){const el=document.createElement('div');el.className='spark';el.style.left=(30+Math.random()*40)+'%';el.style.top=(25+Math.random()*30)+'%';el.style.background=c[i%5];el.style.setProperty('--dx',(Math.random()-0.5)*80+'px');el.style.setProperty('--dy',(Math.random()-0.5)*80+'px');document.getElementById('particles').appendChild(el);setTimeout(()=>el.remove(),700);}}
+
+function render(){
+  if(!S)return;
+  const rate=autoRate(S),canP=S.total>=1e7,pSC=canP?Math.floor(Math.log10(S.total/1e6)):0;
+  const uShafts=Object.keys(S.shafts).filter(k=>S.shafts[k]?.on).length;
+  const hCount=Object.keys(S.mgrs).length;
+  let h='';
+
+  // Sidebar
+  h+=`<div class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon">⛏️</div><div class="brand-text"><div class="brand-title">DEEP EARTH</div><div class="brand-sub">TYCOON</div></div></div>
+    <div class="sidebar-section"><div class="sidebar-label">Infrastructure</div>
+      <div class="infra-card" onclick="upgElv()"><div class="infra-top"><div class="infra-name">🛗 Elevator</div><div class="infra-lv">Lv.${S.elv}</div></div><div class="infra-bottom">${S.elv<ELV.length?`<div class="infra-cost">🪙 ${fmt(ELV[S.elv].cost)}</div><div class="infra-mult">→ x${ELV[S.elv].mult.toFixed(1)}</div>`:'<div class="infra-max">✨ MAX</div>'}</div></div>
+      <div class="infra-card" onclick="upgWh()"><div class="infra-top"><div class="infra-name">🏭 Warehouse</div><div class="infra-lv">Lv.${S.wh}</div></div><div class="infra-bottom">${S.wh<WH.length?`<div class="infra-cost">🪙 ${fmt(WH[S.wh].cost)}</div><div class="infra-mult">→ x${WH[S.wh].mult.toFixed(1)}</div>`:'<div class="infra-max">✨ MAX</div>'}</div></div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-stats"><div class="sidebar-label">Quick Stats</div>
+      <div class="mini-stat"><span>Shafts</span><span class="mini-stat-val">${uShafts}/${SHAFTS.length}</span></div>
+      <div class="mini-stat"><span>Workers</span><span class="mini-stat-val">${hCount}/${WORKERS.length}</span></div>
+      <div class="mini-stat"><span>Prestige</span><span class="mini-stat-val">${S.pLv}</span></div>
+      <div class="mini-stat"><span>Income Mult</span><span class="mini-stat-val">x${S.pM.toFixed(1)}</span></div>
+      <div class="mini-stat"><span>Elv Mult</span><span class="mini-stat-val">x${eM(S).toFixed(1)}</span></div>
+      <div class="mini-stat"><span>WH Mult</span><span class="mini-stat-val">x${wM(S).toFixed(1)}</span></div>
+      <div class="mini-stat"><span>Total Earned</span><span class="mini-stat-val">${fmt(S.total)}</span></div>
+    </div>
+  </div>`;
+
+  // Header
+  h+=`<div class="header"><div class="header-left"><div class="tab-btns">
+    <button class="tab-btn ${tab==='mine'?'active':''}" onclick="setTab('mine')">⛏️ Mine</button>
+    <button class="tab-btn ${tab==='workers'?'active':''}" onclick="setTab('workers')">👷 Workers</button>
+    <button class="tab-btn ${tab==='prestige'?'active':''}" onclick="setTab('prestige')">🏆 Prestige</button>
+  </div></div><div class="header-right">
+    <div class="rate-chip">${fmt(rate)}/sec</div>
+    ${S.sc>0?`<div class="sc-chip">💎 ${S.sc} SC</div>`:''}
+    <div class="coin-display"><span class="coin-icon">🪙</span><span class="coin-val" id="hdr-coins">${fmt(S.coins)}</span></div>
+  </div></div>`;
+
+  // Main
+  h+=`<div class="main"><div class="ambient"></div>`;
+  if(tab==='mine'){
+    h+=`<div class="section-header"><div class="section-title">Mine Shafts</div><div class="section-desc">${uShafts} active · Deepest: ${SHAFTS[Math.max(...Object.keys(S.shafts).map(Number))]?.depth||'10m'}</div></div><div class="mine-grid">`;
+    for(const sh of SHAFTS){
+      const ps=S.shafts[sh.id];
+      if(!ps?.on){const prev=sh.id===0||S.shafts[sh.id-1]?.on;if(!prev)continue;
+        h+=`<div class="locked-shaft" onclick="unlockShaft(${sh.id})" style="border-color:${sh.color}22;${S.coins<sh.unlock?'opacity:0.45':''}"><div class="lock-icon">🔒</div><div class="lock-name">${sh.name}</div><div class="lock-depth">Depth: ${sh.depth}</div><div class="lock-cost">🪙 ${fmt(sh.unlock)}</div></div>`;continue;}
+      const lv=ps.lv,tr=tapVal(S,sh.id),cost=sh.cost*1.14**(lv-1),hasMgr=S.mgrs[sh.id],prog=(lv%25)/25*100;
+      h+=`<div class="shaft-card"><div class="accent" style="background:${sh.color}"></div>
+        <div class="shaft-top"><div class="shaft-info"><div class="shaft-emoji">${sh.icon}</div><div><div class="shaft-name">${sh.name}</div><div class="shaft-meta">Level ${lv} · ${sh.depth}</div>${hasMgr?`<div class="shaft-worker">${WORKERS[sh.id].icon} ${WORKERS[sh.id].name}</div>`:''}</div></div>
+        <div class="shaft-rate-box"><div class="shaft-rate">${fmt(tr)}/tap</div>${hasMgr?'<div class="auto-badge">🤖 AUTO</div>':''}</div></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${prog}%;background:${sh.color}"></div></div>
+        <div class="shaft-actions"><button class="mine-btn" style="background:${sh.color}bb" onclick="mine(${sh.id})">⛏️ MINE</button><button class="upgrade-btn" onclick="upgShaft(${sh.id})" ${S.coins<cost?'disabled':''}>⬆️ ${fmt(cost)}</button></div></div>`;
+    }
+    h+=`</div>`;
+  } else if(tab==='workers'){
+    h+=`<div class="section-header"><div class="section-title">Mine Workers</div><div class="section-desc">Hire workers to auto-mine shafts</div></div><div class="workers-grid">`;
+    for(const w of WORKERS){const hired=S.mgrs[w.shaft],ok=S.shafts[w.shaft]?.on;
+      h+=`<div class="worker-card" style="opacity:${ok?1:0.3}"><div class="worker-left"><div class="worker-avatar">${w.icon}<span class="worker-rank">${w.rank.slice(0,2)}</span></div><div><div class="worker-name">${w.name}</div><div class="worker-role">${SHAFTS[w.shaft].name}</div><div class="worker-perk">${w.perk}</div></div></div>${hired?'<div class="hired-badge">✅ HIRED</div>':`<button class="hire-btn" onclick="hire(${w.id})" ${(S.coins<w.cost||!ok)?'disabled':''}>🪙 ${fmt(w.cost)}</button>`}</div>`;
+    }h+=`</div>`;
+  } else if(tab==='prestige'){
+    h+=`<div class="prestige-panel"><div class="prestige-crown">🏆</div><div class="prestige-title">PRESTIGE</div>
+      <div class="prestige-stats-grid"><div class="p-stat-card"><div class="p-stat-label">Prestige Level</div><div class="p-stat-val">${S.pLv}</div></div><div class="p-stat-card"><div class="p-stat-label">Income Mult</div><div class="p-stat-val">x${S.pM.toFixed(1)}</div></div><div class="p-stat-card"><div class="p-stat-label">Super Cash</div><div class="p-stat-val">💎 ${S.sc}</div></div><div class="p-stat-card"><div class="p-stat-label">Total Earned</div><div class="p-stat-val">${fmt(S.total)}</div></div></div>
+      <div class="prestige-info">Reset your mine to earn <strong>Super Cash</strong> and a permanent income multiplier.<br>Requires 10M total coins earned.</div>
+      ${canP?`<div class="prestige-reward">You'll earn <strong>💎 ${pSC} Super Cash</strong> · New multiplier: <strong>x${(1+(S.pLv+1)*0.5).toFixed(1)}</strong></div>`:''}
+      <button class="prestige-btn" onclick="prestige()" ${canP?'':'disabled'}>${canP?'⚡ PRESTIGE NOW':`Need ${fmt(1e7-S.total)} more coins`}</button><br><button class="reset-btn" onclick="resetAll()">🔄 Reset All Progress</button></div>`;
+  }
+  h+=`</div>`;
+
+  // Stats panel
+  h+=`<div class="stats-panel"><div class="stats-title">DASHBOARD</div>
+    <div class="stat-card"><div class="stat-card-label">Total Balance</div><div class="stat-card-val" id="sp-coins">${fmt(S.coins)}</div><div class="stat-card-sub">+${fmt(rate)}/sec income</div></div>
+    <div class="stat-card"><div class="stat-card-label">Income / Second</div><div class="stat-card-val" style="color:var(--green)">${fmt(rate)}</div><div class="stat-card-sub">x${(eM(S)*wM(S)*S.pM).toFixed(1)} total multiplier</div></div>
+    <div class="stat-card"><div class="stat-card-label">Combined Multiplier</div><div class="stat-card-val" style="color:var(--cyan)">x${(eM(S)*wM(S)*S.pM).toFixed(1)}</div><div class="stat-card-sub">Elv x${eM(S).toFixed(1)} · WH x${wM(S).toFixed(1)} · P x${S.pM.toFixed(1)}</div></div>
+    <div class="leaderboard-title">Shaft Earnings</div>`;
+  const sorted=[...Object.keys(S.shafts)].filter(k=>S.shafts[k]?.on).map(Number).sort((a,b)=>tapVal(S,b)-tapVal(S,a));
+  for(let i=0;i<sorted.length;i++){const sid=sorted[i];h+=`<div class="lb-row"><div class="lb-left"><div class="lb-rank">#${i+1}</div><div class="lb-icon">${SHAFTS[sid].icon}</div><div class="lb-name">${SHAFTS[sid].name}</div></div><div class="lb-val">${fmt(tapVal(S,sid))}/tap</div></div>`;}
+  h+=`</div>`;
+
+  if(showOff){h+=`<div class="modal-overlay" onclick="closeOff()"><div class="modal-box" onclick="event.stopPropagation()"><div class="modal-icon">💰</div><div class="modal-title">Welcome Back, Tycoon!</div><div class="modal-sub">Your miners kept digging while you were away</div><div class="modal-amount">+${fmt(offAmt)} 🪙</div><button class="modal-btn" onclick="closeOff()">COLLECT</button></div></div>`;}
+
+  document.getElementById('app').innerHTML=h;
+}
+
+let lastT=Date.now();
+function tick(){if(!S){requestAnimationFrame(tick);return;}const now=Date.now(),dt=(now-lastT)/1000;lastT=now;const rate=autoRate(S);if(rate>0){S.coins+=rate*dt;S.total+=rate*dt;const c1=document.getElementById('hdr-coins');if(c1)c1.textContent=fmt(S.coins);const c2=document.getElementById('sp-coins');if(c2)c2.textContent=fmt(S.coins);}requestAnimationFrame(tick);}
+(async function(){await load();render();requestAnimationFrame(tick);setInterval(save,4000);})();
+</script>
+</body>
+</html>

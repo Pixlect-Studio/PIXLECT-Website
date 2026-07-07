@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MiniOS Ultimate</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+user-select:none;
+}
+
+body{
+overflow:hidden;
+background:#0f172a;
+height:100vh;
+}
+
+body.light{
+background:#e5e7eb;
+}
+
+.desktop{
+position:relative;
+width:100%;
+height:100%;
+background:url('https://images.unsplash.com/photo-1493246507139-91e8fad9978e?q=80&w=1600&auto=format&fit=crop') center/cover;
+overflow:hidden;
+}
+
+.desktop::before{
+content:"";
+position:absolute;
+inset:0;
+background:rgba(0,0,0,0.2);
+backdrop-filter:blur(2px);
+}
+
+.taskbar{
+position:absolute;
+bottom:0;
+left:0;
+width:100%;
+height:60px;
+background:rgba(15,15,20,0.75);
+backdrop-filter:blur(20px);
+display:flex;
+align-items:center;
+justify-content:center;
+gap:12px;
+z-index:999;
+border-top:1px solid rgba(255,255,255,0.08);
+}
+
+.task-icon{
+width:46px;
+height:46px;
+border-radius:14px;
+background:rgba(255,255,255,0.08);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:22px;
+color:white;
+cursor:pointer;
+transition:0.2s;
+}
+
+.task-icon:hover{
+transform:translateY(-4px);
+background:rgba(255,255,255,0.15);
+}
+
+.window{
+position:absolute;
+width:760px;
+height:480px;
+background:rgba(20,20,30,0.9);
+backdrop-filter:blur(25px);
+border-radius:20px;
+overflow:hidden;
+display:none;
+flex-direction:column;
+border:1px solid rgba(255,255,255,0.08);
+box-shadow:0 20px 60px rgba(0,0,0,0.45);
+z-index:20;
+}
+
+.titlebar{
+height:42px;
+background:rgba(255,255,255,0.06);
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 14px;
+color:white;
+font-weight:600;
+cursor:move;
+}
+
+.buttons{
+display:flex;
+gap:8px;
+}
+
+.btn{
+width:13px;
+height:13px;
+border-radius:50%;
+cursor:pointer;
+}
+
+.red{background:#ff5f57;}
+.yellow{background:#febc2e;}
+.green{background:#28c840;}
+
+.content{
+flex:1;
+padding:20px;
+overflow:auto;
+color:white;
+}
+
+.start-menu{
+position:absolute;
+bottom:70px;
+left:50%;
+transform:translateX(-50%);
+width:460px;
+height:560px;
+background:rgba(20,20,30,0.92);
+backdrop-filter:blur(25px);
+border-radius:28px;
+display:none;
+flex-direction:column;
+padding:20px;
+z-index:1000;
+box-shadow:0 20px 60px rgba(0,0,0,0.5);
+}
+
+.search{
+width:100%;
+padding:14px;
+border:none;
+outline:none;
+border-radius:14px;
+background:rgba(255,255,255,0.08);
+color:white;
+margin-top:12px;
+}
+
+.apps{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:14px;
+margin-bottom:360px;
+}
+
+.app{
+height:95px;
+background:rgba(255,255,255,0.08);
+border-radius:18px;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+color:white;
+cursor:pointer;
+transition:0.2s;
+}
+
+.app:hover{
+transform:scale(1.03);
+background:rgba(255,255,255,0.14);
+}
+
+.desktop-icons{
+position:absolute;
+top:20px;
+left:20px;
+display:flex;
+flex-direction:column;
+gap:18px;
+z-index:10;
+}
+
+.icon{
+width:84px;
+text-align:center;
+color:white;
+cursor:pointer;
+}
+
+.icon span{
+font-size:42px;
+display:block;
+margin-bottom:6px;
+}
+
+.clock{
+position:absolute;
+right:18px;
+bottom:18px;
+color:white;
+font-size:14px;
+z-index:1001;
+}
+
+textarea{
+width:100%;
+height:100%;
+background:#111827;
+border:none;
+outline:none;
+color:white;
+padding:14px;
+border-radius:12px;
+resize:none;
+}
+
+.login{
+position:absolute;
+inset:0;
+background:black;
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:99999;
+}
+
+.login-box{
+width:420px;
+background:rgba(20,20,30,0.92);
+padding:30px;
+border-radius:24px;
+backdrop-filter:blur(25px);
+color:white;
+box-shadow:0 20px 60px rgba(0,0,0,0.45);
+}
+
+.login-box input{
+width:100%;
+padding:14px;
+border:none;
+border-radius:14px;
+background:rgba(255,255,255,0.08);
+margin-top:14px;
+color:white;
+outline:none;
+}
+
+.login-box button{
+width:100%;
+padding:14px;
+margin-top:16px;
+border:none;
+border-radius:14px;
+background:#2563eb;
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+
+.notifications{
+position:absolute;
+top:20px;
+right:18px;
+display:flex;
+flex-direction:column;
+gap:10px;
+z-index:99999;
+}
+
+.notification{
+background:rgba(15,15,20,0.92);
+color:white;
+padding:14px 18px;
+border-radius:16px;
+backdrop-filter:blur(20px);
+}
+
+@keyframes wobbleScreen{
+0%{transform:translate(0px,0px) rotate(0deg);} 
+10%{transform:translate(-4px,2px) rotate(-1deg);} 
+20%{transform:translate(5px,-3px) rotate(1deg);} 
+30%{transform:translate(-6px,3px) rotate(-1deg);} 
+40%{transform:translate(4px,-2px) rotate(1deg);} 
+50%{transform:translate(-5px,2px) rotate(-1deg);} 
+60%{transform:translate(6px,-3px) rotate(1deg);} 
+70%{transform:translate(-3px,2px) rotate(-1deg);} 
+80%{transform:translate(4px,-2px) rotate(1deg);} 
+90%{transform:translate(-2px,1px) rotate(-1deg);} 
+100%{transform:translate(0px,0px) rotate(0deg);} 
+}
+
+.wobble{
+animation:wobbleScreen 0.12s infinite;
+}
+
+.online-panel{
+position:absolute;
+right:20px;
+top:20px;
+width:240px;
+background:rgba(15,15,20,0.8);
+backdrop-filter:blur(20px);
+padding:16px;
+border-radius:18px;
+color:white;
+z-index:100;
+}
+
+.widget-area{
+position:absolute;
+left:120px;
+bottom:90px;
+display:flex;
+gap:14px;
+z-index:50;
+}
+
+.widget{
+width:180px;
+padding:16px;
+background:rgba(15,15,20,0.78);
+backdrop-filter:blur(18px);
+color:white;
+border-radius:18px;
+}
+
+.browser-page{
+background:white;
+height:100%;
+border-radius:12px;
+overflow:hidden;
+}
+
+.browser-top{
+padding:12px;
+background:#f1f5f9;
+}
+
+.browser-body{
+padding:30px;
+color:black;
+}
+
+.music-player{
+display:flex;
+flex-direction:column;
+gap:14px;
+}
+
+.music-btn{
+padding:14px;
+border:none;
+border-radius:14px;
+background:#2563eb;
+color:white;
+cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="login" id="loginScreen">
+<div class="login-box">
+<h1>MiniOS Ultimate</h1>
+<input id="username" placeholder="Username">
+<input id="password" type="password" placeholder="Password">
+<button onclick="register()">Create Account</button>
+<button onclick="login()">Login</button>
+</div>
+</div>
+
+<div class="desktop">
+
+<div class="desktop-icons">
+<div class="icon" onclick="openWindow('notesWin')">
+<span>📝</span>
+Notes
+</div>
+
+<div class="icon" onclick="openWindow('browserWin')">
+<span>🌐</span>
+Browser
+</div>
+
+<div class="icon" onclick="openWindow('musicWin')">
+<span>🎵</span>
+Music
+</div>
+
+<div class="icon" onclick="openWindow('chatWin')">
+<span>💬</span>
+Chat
+</div>
+
+
+
+<div class="icon" onclick="openWindow('galleryWin')">
+<span>🖼️</span>
+Gallery
+</div>
+</div>
+
+<div class="window" id="notesWin" style="top:90px;left:120px;display:flex;">
+<div class="titlebar">
+Notes
+<div class="buttons">
+<div class="btn yellow" onclick="minimize(this)"></div>
+<div class="btn green" onclick="maximize(this)"></div>
+<div class="btn red" onclick="closeWindow('notesWin')"></div>
+</div>
+</div>
+<div class="content">
+<textarea id="notesArea">Welcome to MiniOS Ultimate ✨</textarea>
+</div>
+</div>
+
+<div class="window" id="browserWin" style="top:120px;left:220px;">
+<div class="titlebar">
+Browser
+<div class="buttons">
+<div class="btn yellow" onclick="minimize(this)"></div>
+<div class="btn green" onclick="maximize(this)"></div>
+<div class="btn red" onclick="closeWindow('browserWin')"></div>
+</div>
+</div>
+<div class="content">
+<div class="browser-page">
+<div class="browser-top">🔍 Search the web...</div>
+<div class="browser-body">
+<h1>Mini Browser</h1>
+<p style="margin-top:10px;">Beautiful fake internet experience.</p>
+<button class="music-btn" onclick="showNotification('Download started')">Download App</button>
+</div>
+</div>
+</div>
+</div>
+
+<div class="window" id="musicWin" style="top:150px;left:320px;">
+<div class="titlebar">
+Music Player
+<div class="buttons">
+<div class="btn yellow" onclick="minimize(this)"></div>
+<div class="btn green" onclick="maximize(this)"></div>
+<div class="btn red" onclick="closeWindow('musicWin')"></div>
+</div>
+</div>
+<div class="content">
+<div class="music-player">
+<h1>LoFi Radio</h1>
+<button class="music-btn">▶ Play</button>
+<button class="music-btn">⏸ Pause</button>
+<button class="music-btn">⏭ Next</button>
+</div>
+</div>
+</div>
+
+<div class="window" id="chatWin" style="top:140px;left:360px;">
+<div class="titlebar">
+Global Chat
+<div class="buttons">
+<div class="btn yellow" onclick="minimize(this)"></div>
+<div class="btn green" onclick="maximize(this)"></div>
+<div class="btn red" onclick="closeWindow('chatWin')"></div>
+</div>
+</div>
+<div class="content">
+<div id="chatMessages" style="height:320px;overflow:auto;background:rgba(255,255,255,0.04);padding:12px;border-radius:14px"></div>
+
+<div style="display:flex;gap:10px;margin-top:14px;">
+<input id="chatInput" placeholder="Message everyone..." style="flex:1;padding:14px;border:none;border-radius:12px;background:rgba(255,255,255,0.08);color:white;outline:none;">
+<button class="music-btn" onclick="sendMessage()">Send</button>
+</div>
+</div>
+</div>
+
+<div class="window" id="hackerWin" style="top:170px;left:460px;">
+<div class="titlebar">
+Hacker Simulator
+<div class="buttons">
+<div class="btn yellow" onclick="minimize(this)"></div>
+<div class="btn green" onclick="maximize(this)"></div>
+<div class="btn red" onclick="closeWindow('hackerWin')"></div>
+</div>
+</div>
+<div class="content">
+<h1 style="font-size:32px;">💻 Hacker App</h1>
+<p style="margin-top:12px;color:#9ca3af;">Just a fun fake simulator inside MiniOS.</p>
+
+<div style="margin-top:20px;background:black;padding:18px;border-radius:14px;color:#00ff88;font-family:monospace;height:220px;overflow:auto" id="hackTerminal">
+> system initialized...
+</div>
+
+<input id="hackUser" placeholder="Target username" style="width:100%;padding:14px;border:none;border-radius:12px;background:rgba(255,255,255,0.08);color:white;outline:none;margin-top:16px;">
+
+<button class="music-btn" onclick="runHack()" style="margin-top:16px;">Run Fake Exploit</button>
+</div>
+</div>
+
+<div class="window" id="galleryWin" style="top:180px;left:420px;">
+<div class="titlebar">
+Gallery
+<div class="buttons">
+<div class="btn yellow" onclick="minimize(this)"></div>
+<div class="btn green" onclick="maximize(this)"></div>
+<div class="btn red" onclick="closeWindow('galleryWin')"></div>
+</div>
+</div>
+<div class="content">
+<img src="https://images.unsplash.com/photo-1511300636408-a63a89df3482?q=80&w=1200&auto=format&fit=crop" style="width:100%;border-radius:16px;">
+</div>
+</div>
+
+<div class="start-menu" id="startMenu">
+<h2 style="color:white;">Start</h2>
+<input class="search" id="startSearch" placeholder="Search apps...">
+<div class="apps">
+<div class="app" onclick="openWindow('notesWin')">📝<p>Notes</p></div>
+<div class="app" onclick="openWindow('browserWin')">🌐<p>Browser</p></div>
+<div class="app" onclick="openWindow('musicWin')">🎵<p>Music</p></div>
+<div class="app" onclick="openWindow('galleryWin')">🖼️<p>Gallery</p></div>
+<div class="app" onclick="toggleTheme()">🌙<p>Theme</p></div>
+<div class="app" onclick="changeWallpaper()">🖼️<p>Wallpaper</p></div>
+<div class="app" onclick="openWindow('chatWin')">💬<p>Chat</p></div>
+
+</div>
+</div>
+
+<div class="taskbar">
+<div class="task-icon" onclick="toggleStart()">🪟</div>
+<div class="task-icon" onclick="openWindow('notesWin')">📝</div>
+<div class="task-icon" onclick="openWindow('browserWin')">🌐</div>
+<div class="task-icon" onclick="openWindow('musicWin')">🎵</div>
+<div class="task-icon" onclick="openWindow('galleryWin')">🖼️</div>
+</div>
+
+<div class="clock" id="clock"></div>
+
+<div class="notifications" id="notifications"></div>
+
+<div id="statusWidgets" style="position:absolute;right:20px;bottom:90px;display:flex;flex-direction:column;gap:12px;z-index:200;">
+<div class="widget"><h3>Weather</h3><p>☀️ 28°C Dubai</p></div>
+<div class="widget"><h3>Battery</h3><p>🔋 100%</p></div>
+<div class="widget"><h3>Music</h3><p>🎵 Chill Mix</p></div>
+</div>
+
+<div class="online-panel">
+<h3>🌐 Online Users</h3>
+<div id="onlineUsers" style="margin-top:12px;"></div>
+</div>
+
+<div class="widget-area" id="widgets"></div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getDatabase, ref, set, get, update, onValue } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+const firebaseConfig = {
+databaseURL:'https://vm-dxb-default-rtdb.firebaseio.com/'
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+window.register = async function(){
+const username=document.getElementById('username').value;
+const password=document.getElementById('password').value;
+
+if(!username || !password)return;
+
+const userRef=ref(db,'users/'+username);
+const snap=await get(userRef);
+
+if(snap.exists()){
+alert('Username taken');
+return;
+}
+
+await set(userRef,{
+password,
+wallpaper:'default',
+notes:'Welcome to MiniOS Ultimate ✨',
+created:Date.now()
+});
+
+alert('Account created');
+};
+
+window.login = async function(){
+const username=document.getElementById('username').value;
+const password=document.getElementById('password').value;
+
+const snap=await get(ref(db,'users/'+username));
+
+if(!snap.exists()){
+alert('No account');
+return;
+}
+
+const data=snap.val();
+
+if(data.password!==password){
+alert('Wrong password');
+return;
+}
+
+window.currentUser=username;
+window.userData=data;
+
+document.getElementById('loginScreen').style.display='none';
+
+document.getElementById('notesArea').value=data.notes || '';
+
+onlinePresence();
+loadUsers();
+loadWidgets();
+showNotification('Welcome '+username);
+};
+
+function onlinePresence(){
+set(ref(db,'online/'+currentUser),{
+online:true,
+lastSeen:Date.now()
+});
+}
+
+function loadUsers(){
+onValue(ref(db,'online'),(snapshot)=>{
+const users=snapshot.val() || {};
+const panel=document.getElementById('onlineUsers');
+panel.innerHTML='';
+
+Object.keys(users).forEach(user=>{
+panel.innerHTML += `<div style="margin-top:10px;">🟢 ${user}</div>`;
+});
+});
+}
+
+function loadWidgets(){}
+
+window.sendMessage = async function(){
+const input=document.getElementById('chatInput');
+
+if(!input.value.trim()) return;
+
+const id='msg_'+Date.now();
+
+await set(ref(db,'chat/'+id),{
+user:currentUser,
+text:input.value,
+time:Date.now()
+});
+
+input.value='';
+}
+
+onValue(ref(db,'chat'),(snapshot)=>{
+const data=snapshot.val() || {};
+const chat=document.getElementById('chatMessages');
+
+if(!chat) return;
+
+chat.innerHTML='';
+
+Object.keys(data).forEach(key=>{
+const msg=data[key];
+
+chat.innerHTML += `
+<div style="margin-bottom:10px;background:rgba(255,255,255,0.05);padding:10px;border-radius:12px;">
+<strong style="color:#60a5fa">${msg.user}</strong>
+<p style="margin-top:4px;">${msg.text}</p>
+</div>
+`;
+});
+
+chat.scrollTop=chat.scrollHeight;
+});
+
+window.runHack = function(){
+const target=document.getElementById('hackUser').value || 'Unknown User';
+const terminal=document.getElementById('hackTerminal');
+
+const logs=[
+`> locating ${target}...`,
+`> connecting to ${target} laptop...`,
+`> injecting wobble effect...`,
+'> connecting to server...',
+'> bypassing firewall...',
+'> injecting payload...',
+'> downloading files...',
+'> access granted...',
+'> exploit completed successfully'
+];
+
+let i=0;
+
+const interval=setInterval(()=>{
+if(i>=logs.length){
+clearInterval(interval);
+document.querySelector('.desktop').classList.add('wobble');
+
+setTimeout(()=>{
+document.querySelector('.desktop').classList.remove('wobble');
+showNotification(target + ' recovered from wobble attack');
+},10000);
+
+showNotification('Fake hack completed on ' + target);
+
+const overlay=document.createElement('div');
+overlay.style.position='absolute';
+overlay.style.inset='0';
+overlay.style.background='rgba(0,0,0,0.92)';
+overlay.style.display='flex';
+overlay.style.alignItems='center';
+overlay.style.justifyContent='center';
+overlay.style.fontSize='64px';
+overlay.style.fontWeight='bold';
+overlay.style.color='#00ff88';
+overlay.style.fontFamily='monospace';
+overlay.style.zIndex='999999';
+overlay.innerHTML='HACKED';
+document.body.appendChild(overlay);
+
+setTimeout(()=>{
+overlay.remove();
+
+const popup=document.createElement('div');
+popup.style.position='absolute';
+popup.style.top='50%';
+popup.style.left='50%';
+popup.style.transform='translate(-50%,-50%)';
+popup.style.background='rgba(20,20,30,0.95)';
+popup.style.padding='30px';
+popup.style.borderRadius='24px';
+popup.style.color='white';
+popup.style.zIndex='999999';
+
+popup.innerHTML=`
+<h1>🥤 Free Cola?</h1>
+<p style="margin-top:10px;color:#aaa">Claim your free cola reward.</p>
+<button id="colaBtn" style="margin-top:20px;padding:14px 18px;border:none;border-radius:14px;background:#2563eb;color:white;font-weight:bold;cursor:pointer;">YESSIR</button>
+`;
+
+document.body.appendChild(popup);
+
+popup.querySelector('#colaBtn').onclick=async()=>{
+popup.innerHTML=`
+<h1 style="color:#ef4444">System Erased</h1>
+<p style="margin-top:12px">Data lost... restarting MiniOS...</p>
+`;
+
+if(window.currentUser){
+await set(ref(db,'users/'+currentUser),{
+password:userData.password,
+wallpaper:'default',
+notes:'',
+created:Date.now()
+});
+}
+
+setTimeout(()=>{
+location.reload();
+},3500);
+};
+
+},5000);
+return;
+}
+
+terminal.innerHTML += '<br>' + logs[i];
+terminal.scrollTop=terminal.scrollHeight;
+i++;
+},700);
+}
+
+window.saveNotes = function(){
+update(ref(db,'users/'+currentUser),{
+notes:document.getElementById('notesArea').value
+});
+showNotification('Notes saved');
+}
+
+setInterval(()=>{
+if(window.currentUser){
+saveNotes();
+}
+},5000);
+
+</script>
+
+<script>
+document.getElementById('startSearch').addEventListener('keydown',(e)=>{
+if(e.key==='Enter'){
+const val=e.target.value.toLowerCase().trim();
+
+if(val==='hacker'){
+openWindow('hackerWin');
+showNotification('Hidden app unlocked');
+}else{
+showNotification('No results found');
+}
+}
+});
+
+function toggleStart(){
+const menu=document.getElementById('startMenu');
+menu.style.display=menu.style.display==='flex'?'none':'flex';
+}
+
+function openWindow(id){
+document.getElementById(id).style.display='flex';
+}
+
+function closeWindow(id){
+document.getElementById(id).style.display='none';
+}
+
+function minimize(btn){
+btn.closest('.window').style.display='none';
+}
+
+function maximize(btn){
+const win=btn.closest('.window');
+
+if(win.dataset.max==='true'){
+win.style.width='760px';
+win.style.height='480px';
+win.dataset.max='false';
+}else{
+win.style.width='100vw';
+win.style.height='calc(100vh - 60px)';
+win.style.left='0';
+win.style.top='0';
+win.dataset.max='true';
+}
+}
+
+function updateClock(){
+document.getElementById('clock').innerHTML=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+
+setInterval(updateClock,1000);
+updateClock();
+
+function toggleTheme(){
+document.body.classList.toggle('light');
+showNotification('Theme changed');
+}
+
+const walls=[
+'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?q=80&w=1600&auto=format&fit=crop',
+'https://images.unsplash.com/photo-1511300636408-a63a89df3482?q=80&w=1600&auto=format&fit=crop',
+'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1600&auto=format&fit=crop'
+];
+
+function changeWallpaper(){
+const wall=walls[Math.floor(Math.random()*walls.length)];
+document.querySelector('.desktop').style.background=`url(${wall}) center/cover`;
+showNotification('Wallpaper changed');
+}
+
+function showNotification(text){
+const notif=document.createElement('div');
+notif.className='notification';
+notif.innerHTML=text;
+document.getElementById('notifications').appendChild(notif);
+
+setTimeout(()=>{
+notif.remove();
+},4000);
+}
+
+// DRAG WINDOWS
+
+document.querySelectorAll('.window').forEach(win=>{
+const bar=win.querySelector('.titlebar');
+let dragging=false;
+let offsetX=0;
+let offsetY=0;
+
+bar.addEventListener('mousedown',(e)=>{
+dragging=true;
+offsetX=e.clientX-win.offsetLeft;
+offsetY=e.clientY-win.offsetTop;
+});
+
+document.addEventListener('mousemove',(e)=>{
+if(dragging && win.dataset.max!=='true'){
+win.style.left=(e.clientX-offsetX)+'px';
+win.style.top=(e.clientY-offsetY)+'px';
+}
+});
+
+document.addEventListener('mouseup',()=>{
+dragging=false;
+});
+});
+</script>
+
+</body>
+</html>

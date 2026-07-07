@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact - PIXLECT Studio</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="/logo.png">
+</head>
+<body>
+  <canvas id="bg"></canvas>
+
+  <nav>
+    <span class="logo">PIXLECT Studio</span>
+    <div class="nav-links">
+      <a href="projects.html">Projects</a>
+      <a href="index.html">Home</a>
+      <a href="history.html">History</a>
+      <a href="contact.html">Contact</a>
+    </div>
+    <a class="btn" href="https://github.com/Pixlect-Studio" target="_blank">GitHub →</a>
+  </nav>
+
+  <section class="hero" style="padding-top:40px;">
+    <div>
+      <div class="badge">Let’s build together</div>
+      <h1>Contact PIXLECT<br>& Collaborate</h1>
+      <p>
+        Want to partner on a game, contribute to code, or suggest a new idea?
+        Send us a message using the form below.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="section-tag">Message</div>
+      <div class="section-title">Send a note</div>
+
+      <div class="card">
+        <div class="card-body">
+          <form onsubmit="event.preventDefault(); window.location.href='mailto:aaraiz.adnan14@gmail.com?subject=PIXLECT%20Contact';">
+
+            <div class="form-grid">
+              <div>
+                <label for="name">Name</label>
+                <input id="name" name="name" type="text" placeholder="Your name" required />
+              </div>
+              <div>
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" placeholder="you@example.com" required />
+              </div>
+            </div>
+
+            <div style="margin-top:16px;">
+              <label for="topic">Topic</label>
+              <input id="topic" name="topic" type="text" placeholder="Game idea / Collaboration / Bug report" />
+            </div>
+
+            <div style="margin-top:16px;">
+              <label for="message">Message</label>
+              <textarea id="message" name="message" placeholder="Write your message..." required></textarea>
+            </div>
+
+            <div style="margin-top:18px; display:flex; gap:14px; flex-wrap:wrap;">
+              <button class="btn" type="submit">Send</button>
+              <a class="btn-ghost" href="mailto:aaraiz.adnan14@gmail.com?subject=PIXLECT%20Contact">Email instead</a>
+            </div>
+
+
+            
+            
+
+          </form>
+        </div>
+      </div>
+
+      <div style="margin-top:22px; display:grid; grid-template-columns: 1fr 1fr; gap: 18px;">
+        <div class="t-item">
+          <div class="t-year">GitHub</div>
+          <h3 style="margin-bottom:6px;">Open-source & contributions</h3>
+          <p>
+            Explore repositories, fork projects, and open issues for improvements.
+          </p>
+          <div style="margin-top:14px;">
+            <a href="https://github.com/Pixlect-Studio" target="_blank" class="card a">View GitHub →</a>
+          </div>
+        </div>
+
+        <div class="t-item">
+          <div class="t-year">Developers</div>
+          <h3 style="margin-bottom:6px;">Team inquiries</h3>
+          <p>
+            If you’re interested in joining PIXLECT Studio, send us a message and include your skills.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    © 2026 Pixlect Studio · Code is free to use without restrictions (no copying allowed).
+  </footer>
+
+  <script>
+    const canvas = document.getElementById("bg");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const particles = Array.from({ length: 80 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      r: Math.random() * 1.8 + 0.5,
+      o: Math.random() * 0.5 + 0.15
+    }));
+
+    function animate() {
+      requestAnimationFrame(animate);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(99,102,241,${p.o})`;
+        ctx.fill();
+      });
+    }
+
+    animate();
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+  </script>
+</body>
+</html>
+

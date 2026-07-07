@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QatarPakistan14 — Pixlect Studio</title>
+<style>
+:root {
+--bg: #0a0d12;
+--card: #111520;
+--accent: #0ea5e9;
+--accent2: #06b6d4;
+--text: #e2e8f0;
+--muted: #94a3b8;
+--border: rgba(255,255,255,0.08);
+}
+
+{ margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+font-family: "Segoe UI", sans-serif;
+background: var(--bg);
+color: var(--text);
+overflow-x: hidden;
+min-height: 100vh;
+}
+canvas#bg {
+position: fixed;
+top: 0; left: 0;
+width: 100%; height: 100%;
+z-index: -1;
+pointer-events: none;
+}
+nav {
+position: sticky;
+top: 0;
+backdrop-filter: blur(20px);
+background: rgba(10,13,18,0.85);
+padding: 16px 40px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+border-bottom: 1px solid var(--border);
+z-index: 100;
+}
+.logo {
+font-size: 16px;
+font-weight: 700;
+background: linear-gradient(135deg, var(--accent), var(--accent2));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+text-decoration: none;
+}
+.back-btn {
+background: transparent;
+border: 1px solid var(--border);
+color: var(--muted);
+padding: 8px 18px;
+border-radius: 8px;
+font-size: 13px;
+cursor: pointer;
+text-decoration: none;
+display: inline-block;
+transition: border-color 0.2s, color 0.2s;
+font-family: "Segoe UI", sans-serif;
+}
+.back-btn:hover { border-color: var(--accent); color: var(--accent2); }
+.hero {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+text-align: center;
+padding: 80px 20px 60px;
+}
+.avatar-ring {
+width: 120px;
+height: 120px;
+border-radius: 50%;
+background: linear-gradient(135deg, var(--accent), var(--accent2));
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 52px;
+margin-bottom: 24px;
+box-shadow: 0 0 40px rgba(14,165,233,0.3);
+}
+.hero h1 {
+font-size: clamp(32px, 5vw, 56px);
+font-weight: 800;
+line-height: 1.1;
+margin-bottom: 10px;
+background: linear-gradient(135deg, #fff 30%, var(--accent2));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+}
+.role-badge {
+display: inline-block;
+background: rgba(14,165,233,0.15);
+border: 1px solid rgba(14,165,233,0.3);
+color: var(--accent2);
+padding: 6px 18px;
+border-radius: 20px;
+font-size: 13px;
+margin-bottom: 20px;
+}
+.hero-bio {
+max-width: 480px;
+color: var(--muted);
+font-size: 16px;
+line-height: 1.75;
+margin-bottom: 32px;
+}
+.hero-btns {
+display: flex;
+gap: 12px;
+flex-wrap: wrap;
+justify-content: center;
+}
+.btn {
+background: linear-gradient(135deg, var(--accent), var(--accent2));
+border: none;
+color: white;
+padding: 10px 22px;
+border-radius: 8px;
+font-size: 14px;
+font-weight: 700;
+cursor: pointer;
+text-decoration: none;
+display: inline-block;
+transition: opacity 0.2s, transform 0.2s;
+}
+.btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.btn-ghost {
+background: transparent;
+border: 1px solid var(--border);
+color: var(--muted);
+padding: 10px 22px;
+border-radius: 8px;
+font-size: 14px;
+cursor: pointer;
+text-decoration: none;
+display: inline-block;
+transition: border-color 0.2s, color 0.2s;
+}
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent2); }
+.stats-row {
+display: flex;
+gap: 40px;
+margin-top: 56px;
+flex-wrap: wrap;
+justify-content: center;
+}
+.stat-num {
+font-size: 30px;
+font-weight: 800;
+background: linear-gradient(135deg, var(--accent), var(--accent2));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+}
+.stat-label {
+font-size: 12px;
+color: var(--muted);
+margin-top: 4px;
+}
+section { padding: 70px 20px; }
+.container { max-width: 900px; margin: auto; }
+.section-tag {
+font-size: 12px;
+text-transform: uppercase;
+letter-spacing: 0.14em;
+color: var(--accent);
+font-weight: 600;
+margin-bottom: 10px;
+}
+.section-title {
+font-size: clamp(24px, 3vw, 36px);
+font-weight: 700;
+margin-bottom: 36px;
+}
+.skills-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+gap: 16px;
+}
+.skill-card {
+background: var(--card);
+border: 1px solid var(--border);
+border-radius: 14px;
+padding: 22px;
+transition: border-color 0.3s, transform 0.3s;
+}
+.skill-card:hover {
+border-color: rgba(14,165,233,0.4);
+transform: translateY(-4px);
+}
+.skill-icon { font-size: 28px; margin-bottom: 12px; }
+.skill-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+.skill-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.projects-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+gap: 24px;
+}
+.proj-card {
+background: var(--card);
+border: 1px solid var(--border);
+border-radius: 14px;
+overflow: hidden;
+transition: border-color 0.3s, transform 0.3s;
+}
+.proj-card:hover {
+border-color: rgba(14,165,233,0.4);
+transform: translateY(-6px);
+}
+.proj-icon {
+height: 160px;
+background: rgba(14,165,233,0.07);
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 52px;
+}
+.proj-body {
+padding: 24px;
+}
+.proj-tag {
+font-size: 11px;
+text-transform: uppercase;
+letter-spacing: 0.1em;
+font-weight: 600;
+margin-bottom: 8px;
+color: var(--accent);
+}
+.proj-tag.live { color: #22c55e; }
+.proj-card h3 {
+font-size: 19px;
+font-weight: 700;
+margin-bottom: 8px;
+}
+.proj-card p {
+font-size: 14px;
+color: var(--muted);
+line-height: 1.65;
+margin-bottom: 18px;
+}
+.proj-card a {
+color: var(--accent2);
+font-size: 14px;
+text-decoration: none;
+font-weight: 500;
+display: inline-flex;
+align-items: center;
+gap: 6px;
+}
+.proj-card a:hover { text-decoration: underline; }
+.stack-pills {
+display: flex;
+flex-wrap: wrap;
+gap: 10px;
+}
+.pill {
+background: rgba(14,165,233,0.1);
+border: 1px solid rgba(14,165,233,0.2);
+color: var(--accent2);
+padding: 8px 18px;
+border-radius: 20px;
+font-size: 14px;
+}
+.contact-banner {
+background: linear-gradient(135deg, rgba(14,165,233,0.12), rgba(6,182,212,0.05));
+border: 1px solid rgba(14,165,233,0.2);
+border-radius: 20px;
+padding: 52px 40px;
+text-align: center;
+}
+.contact-banner h2 { font-size: clamp(22px, 3vw, 34px); font-weight: 700; margin-bottom: 12px; }
+.contact-banner p { color: var(--muted); font-size: 15px; margin-bottom: 28px; max-width: 400px; margin-left: auto; margin-right: auto; }
+footer {
+text-align: center;
+padding: 28px 20px;
+border-top: 1px solid var(--border);
+color: var(--muted);
+font-size: 13px;
+}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<nav>
+  <a class="logo" href="https://Pixlect-Studio.github.io/About-Pixlect">← Pixlect Studio</a>
+  <a class="back-btn" href="https://github.com/QatarPakistan14" target="_blank">GitHub Profile</a>
+</nav>
+<div class="hero">
+  <div class="avatar-ring">👑</div>
+  <div class="role-badge">Owner & Lead Dev · Pixlect Studio</div>
+  <h1>QatarPakistan14</h1>
+  <p class="hero-bio">Founder and lead developer of Pixlect Studio. Building browser games, web tools, and open-source projects from Pakistan. Turning ideas into playable, usable things.</p>
+  <div class="hero-btns">
+    <a class="btn" href="https://github.com/QatarPakistan14" target="_blank">GitHub →</a>
+    <a class="btn-ghost" href="https://Pixlect-Studio.github.io/About-Pixlect" target="_blank">Pixlect Studio</a>
+  </div>
+  <div class="stats-row">
+    <div class="stat-item">
+      <div class="stat-num">3+</div>
+      <div class="stat-label">Projects</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">2026</div>
+      <div class="stat-label">Active</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">Pakistan</div>
+      <div class="stat-label">Based In</div>
+    </div>
+  </div>
+</div>
+<section>
+  <div class="container">
+    <div class="section-tag">What I do</div>
+    <div class="section-title">Skills & Focus</div>
+    <div class="skills-grid">
+  <div class="skill-card">
+    <div class="skill-icon">👑</div>
+    <h3>Studio Leadership</h3>
+    <p>Founded and leads Pixlect Studio — directing projects, setting vision, and managing the team.</p>
+  </div>
+
+  <div class="skill-card">
+    <div class="skill-icon">🎮</div>
+    <h3>Game Development</h3>
+    <p>Designing and building 2D browser games with engaging mechanics, all running natively in the browser.</p>
+  </div>
+
+  <div class="skill-card">
+    <div class="skill-icon">🌐</div>
+    <h3>Web Development</h3>
+    <p>Full front-end development — HTML, CSS, JavaScript — building fast, clean, no-nonsense web experiences.</p>
+  </div>
+
+  <div class="skill-card">
+    <div class="skill-icon">📦</div>
+    <h3>Open Source</h3>
+    <p>Everything built at Pixlect Studio is free and open — built to be shared, forked, and learned from.</p>
+  </div>
+
+</div>
+  </div>
+</section>
+<section style="padding-top:0;">
+  <div class="container">
+    <div class="section-tag">How I build</div>
+    <div class="section-title">My Stack</div>
+    <div class="stack-pills">
+      <span class="pill">HTML & CSS</span>
+      <span class="pill">JavaScript</span>
+      <span class="pill">GitHub Pages</span>
+      <span class="pill">Netlify</span>
+      <span class="pill">Web Tools</span>
+      <span class="pill">Open Source</span>
+    </div>
+  </div>
+</section>
+<section style="padding-top:0;">
+  <div class="container">
+    <div class="section-tag">My work</div>
+    <div class="section-title">Projects</div>
+    <div class="projects-grid">
+  <div class="proj-card">
+    <div class="proj-icon">💻</div>
+    <div class="proj-body">
+      <div class="proj-tag live">Live</div>
+      <h3>Console Creator</h3>
+      <p>Build custom browser consoles with ease. A powerful tool for creating interactive command-line experiences in the web.</p>
+      <a href="https://pixlect-studio.github.io/ConsoleCreator/" target="_blank">Open project →</a>
+    </div>
+  </div>
+
+  <div class="proj-card">
+    <div class="proj-icon">🧪</div>
+    <div class="proj-body">
+      <div class="proj-tag live">Live</div>
+      <h3>MASS-CONTROL</h3>
+      <p>Advanced testing framework for batch operations. Test multiple scenarios and configurations at once.</p>
+      <a href="https://pixlect-studio.github.io/MASS-CONTROL/" target="_blank">Open project →</a>
+    </div>
+  </div>
+
+  <div class="proj-card">
+    <div class="proj-icon">🛠️</div>
+    <div class="proj-body">
+      <div class="proj-tag live">Live</div>
+      <h3>Workstops (Tools++)</h3>
+      <p>A comprehensive toolkit featuring advanced utilities. Everything you need for web development and design work.</p>
+      <a href="https://pixlect-studio.github.io/WorkStops/" target="_blank">Open project →</a>
+    </div>
+  </div>
+
+</div>
+  </div>
+</section>
+<section style="padding-top:0;">
+  <div class="container">
+    <div class="contact-banner">
+      <h2>Want to collaborate?</h2>
+      <p>Find me on GitHub or explore everything we're building at Pixlect Studio.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <a class="btn" href="https://github.com/QatarPakistan14" target="_blank">GitHub →</a>
+        <a class="btn-ghost" href="https://Pixlect-Studio.github.io/About-Pixlect" target="_blank">Pixlect Studio</a>
+      </div>
+    </div>
+  </div>
+</section>
+<footer>
+  © 2026 QatarPakistan14 · Founder of Pixlect Studio · Pakistan · Code is free to use without restrictions. No copying allowed.
+</footer>
+<script>
+const canvas = document.getElementById("bg");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const particles = Array.from({length: 80}, () => ({
+  x: Math.random() * canvas.width,
+  y: Math.random() * canvas.height,
+  vx: (Math.random() - 0.5) * 0.3,
+  vy: (Math.random() - 0.5) * 0.3,
+  r: Math.random() * 1.8 + 0.5,
+  o: Math.random() * 0.5 + 0.15
+}));
+
+function animate() {
+  requestAnimationFrame(animate);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.x < 0) p.x = canvas.width;
+    if (p.x > canvas.width) p.x = 0;
+    if (p.y < 0) p.y = canvas.height;
+    if (p.y > canvas.height) p.y = 0;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(14,165,233,${p.o})`;
+    ctx.fill();
+  });
+}
+
+animate();
+window.addEventListener("resize", () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coordinates Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700&family=Noto+Sans+Arabic:wght@400;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --font:'Sora',sans-serif;
+  --mono:'DM Mono',monospace;
+  --r:10px; --r-lg:16px; --r-pill:100px;
+  --ease:cubic-bezier(.4,0,.2,1);
+  --spring:cubic-bezier(.34,1.56,.64,1);
+  --t:.18s;
+}
+
+[data-theme="light"] {
+  --bg:#f0f2f8; --surface:#fff; --surface-2:#f6f8fd; --surface-3:#eef1f8;
+  --border:#dde1ee; --border-s:#c8cedf;
+  --text:#0d1117; --text-2:#4a5168; --text-3:#8a90a8;
+  --accent:#1a6fff; --accent-s:rgba(26,111,255,.08); --accent-m:rgba(26,111,255,.18);
+  --accent-glow:rgba(26,111,255,.35); --accent-hi:#3d83ff;
+  --green:#00b341; --green-s:rgba(0,179,65,.12);
+  --marker-ring:#fff; --panel-bg:rgba(255,255,255,.9);
+  --toast-bg:#0d1117; --toast-text:#fff; --input-bg:#f0f2f8;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.06);
+  --shadow-md:0 4px 24px rgba(0,0,0,.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,.14);
+  --shadow-xl:0 24px 64px rgba(0,0,0,.18);
+}
+
+[data-theme="dark"] {
+  --bg:#080b12; --surface:#101420; --surface-2:#161c2a; --surface-3:#1e2535;
+  --border:#1e2535; --border-s:#29334a;
+  --text:#e8ecf5; --text-2:#7c859e; --text-3:#4a5168;
+  --accent:#3d83ff; --accent-s:rgba(61,131,255,.1); --accent-m:rgba(61,131,255,.22);
+  --accent-glow:rgba(61,131,255,.4); --accent-hi:#5e97ff;
+  --green:#2ecc71; --green-s:rgba(46,204,113,.12);
+  --marker-ring:#080b12; --panel-bg:rgba(16,20,32,.9);
+  --toast-bg:#e8ecf5; --toast-text:#080b12; --input-bg:#080b12;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.25);
+  --shadow-md:0 4px 24px rgba(0,0,0,.4);
+  --shadow-lg:0 12px 48px rgba(0,0,0,.55);
+  --shadow-xl:0 24px 64px rgba(0,0,0,.65);
+}
+
+body {
+  font-family:var(--font);
+  background:var(--bg); color:var(--text);
+  height:100dvh; overflow:hidden;
+  display:flex; flex-direction:column;
+  -webkit-font-smoothing:antialiased;
+}
+body[data-lang="ar"] { font-family:'Noto Sans Arabic',var(--font); }
+body[data-lang="ur"] { font-family:'Noto Nastaliq Urdu',var(--font); }
+
+/* ── LOADER ── */
+#loader {
+  position:fixed; inset:0;
+  background:var(--bg);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  z-index:9999; gap:18px;
+  transition:opacity .4s var(--ease);
+}
+#loader.gone { opacity:0; pointer-events:none; }
+
+.loader-icon {
+  width:54px; height:54px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-hi));
+  border-radius:15px; display:grid; place-items:center;
+  box-shadow:0 8px 28px var(--accent-glow);
+  animation:lp 1.4s ease-in-out infinite;
+}
+.loader-icon svg { width:26px; height:26px; stroke:#fff; }
+@keyframes lp { 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
+
+.loader-bar { width:160px; height:3px; background:var(--border); border-radius:4px; overflow:hidden; }
+.loader-bar-fill {
+  height:100%;
+  background:linear-gradient(90deg,var(--accent),var(--accent-hi));
+  border-radius:4px;
+  animation:lf 1.4s var(--ease) forwards;
+}
+@keyframes lf { from{width:0%} to{width:100%} }
+.loader-text { font-size:13px; color:var(--text-3); font-family:var(--mono); letter-spacing:.5px; }
+
+/* ── HEADER ── */
+header {
+  display:flex; align-items:center;
+  padding:0 18px; height:58px;
+  background:var(--surface); border-bottom:1px solid var(--border);
+  z-index:200; flex-shrink:0; gap:14px; position:relative;
+}
+header::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent-hi),transparent 70%);
+  opacity:.7;
+}
+
+.logo { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.logo-icon {
+  width:32px; height:32px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-hi));
+  border-radius:9px; display:grid; place-items:center;
+  box-shadow:0 4px 14px var(--accent-glow); position:relative; overflow:hidden;
+}
+.logo-icon::after {
+  content:''; position:absolute; top:-6px; right:-6px;
+  width:16px; height:16px; background:rgba(255,255,255,.25); border-radius:50%;
+}
+.logo-icon svg { width:16px; height:16px; stroke:#fff; position:relative; z-index:1; }
+.logo-text { font-size:15.5px; font-weight:700; letter-spacing:-.4px; color:var(--text); }
+.logo-text em { color:var(--accent); font-style:normal; }
+
+/* ── SEARCH ── */
+.search-wrap { flex:1; max-width:480px; margin:0 auto; position:relative; }
+
+.search-box {
+  width:100%; display:flex; align-items:center;
+  background:var(--input-bg); border:1px solid var(--border);
+  border-radius:var(--r); padding:0 11px; height:38px; gap:8px;
+  transition:border-color var(--t) var(--ease),box-shadow var(--t) var(--ease);
+}
+.search-box:focus-within { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-s); }
+.s-icon { width:15px; height:15px; stroke:var(--text-3); flex-shrink:0; transition:stroke var(--t); }
+.search-box:focus-within .s-icon { stroke:var(--accent); }
+.search-box input {
+  flex:1; min-width:0; border:none; background:none;
+  color:var(--text); font-family:inherit; font-size:13.5px; outline:none;
+}
+.search-box input::placeholder { color:var(--text-3); }
+.s-clear {
+  width:20px; height:20px; border:none; background:var(--surface-3);
+  border-radius:50%; cursor:pointer; display:none; place-items:center;
+  color:var(--text-2); font-size:11px; line-height:1; padding:0;
+  transition:background var(--t);
+}
+.s-clear:hover { background:var(--border-s); }
+.search-box.has-val .s-clear { display:grid; }
+.s-spinner {
+  width:14px; height:14px; border:2px solid var(--border-s);
+  border-top-color:var(--accent); border-radius:50%;
+  animation:spin .7s linear infinite; display:none; flex-shrink:0;
+}
+.search-box.loading .s-spinner { display:block; }
+.search-box.loading .s-icon { display:none; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+.search-results {
+  position:absolute; top:calc(100% + 6px); left:0; right:0;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-lg); display:none; z-index:400;
+  box-shadow:var(--shadow-lg); max-height:264px; overflow-y:auto;
+  overscroll-behavior:contain;
+}
+.search-results.open { display:block; animation:ddin .15s var(--ease); }
+@keyframes ddin { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+
+.sr-item {
+  padding:10px 14px; cursor:pointer; display:flex;
+  align-items:flex-start; gap:10px;
+  font-size:13px; color:var(--text-2); border-bottom:1px solid var(--border);
+  transition:background var(--t); line-height:1.45;
+}
+.sr-item:last-child { border-bottom:none; }
+.sr-item:hover,.sr-item:focus { background:var(--surface-2); color:var(--text); outline:none; }
+.sr-item svg { flex-shrink:0; margin-top:2px; color:var(--accent); width:14px; height:14px; }
+.sr-item strong { font-weight:600; color:var(--text); }
+.sr-sub { font-size:12px; color:var(--text-3); display:block; margin-top:1px; }
+.sr-msg { padding:14px 16px; text-align:center; color:var(--text-3); font-size:13px; }
+
+/* ── HEADER CONTROLS ── */
+.hc { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+
+.icon-btn {
+  width:36px; height:36px;
+  border:1px solid var(--border); background:var(--surface);
+  border-radius:var(--r); cursor:pointer; color:var(--text-2);
+  display:grid; place-items:center;
+  transition:all var(--t) var(--ease);
+}
+.icon-btn:hover { border-color:var(--border-s); color:var(--text); background:var(--surface-2); }
+.icon-btn:active { transform:scale(.93); }
+.icon-btn svg { width:16px; height:16px; }
+
+.locate-btn {
+  height:36px; padding:0 13px;
+  border:1px solid var(--border); background:var(--surface);
+  border-radius:var(--r); cursor:pointer; color:var(--text-2);
+  font-family:inherit; font-size:13px; font-weight:500;
+  display:flex; align-items:center; gap:7px;
+  transition:all var(--t) var(--ease); white-space:nowrap;
+}
+.locate-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-s); }
+.locate-btn:active { transform:scale(.97); }
+.locate-btn svg { width:14px; height:14px; flex-shrink:0; }
+.locate-btn.loading { opacity:.55; pointer-events:none; }
+.loc-spin { display:none; width:14px; height:14px; border:2px solid var(--border-s); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0; }
+.locate-btn.loading .loc-spin { display:block; }
+.locate-btn.loading .loc-icon { display:none; }
+
+.lang-wrap { position:relative; }
+.lang-dd {
+  position:absolute; top:calc(100% + 6px); right:0;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-lg); display:none; z-index:400;
+  box-shadow:var(--shadow-lg); min-width:160px; overflow:hidden;
+}
+[dir="rtl"] .lang-dd { right:auto; left:0; }
+.lang-wrap.open .lang-dd { display:block; animation:ddin .15s var(--ease); }
+.lang-item {
+  padding:9px 14px; cursor:pointer; font-size:13px; color:var(--text-2);
+  border-bottom:1px solid var(--border); display:flex; align-items:center; gap:9px;
+  transition:background var(--t); font-family:var(--font);
+}
+.lang-item:last-child { border-bottom:none; }
+.lang-item:hover { background:var(--surface-2); color:var(--text); }
+.lang-item.active { color:var(--accent); font-weight:600; }
+.lang-item .lf { font-size:16px; line-height:1; }
+
+/* ── MAP ── */
+#map { flex:1; width:100%; z-index:1; background:var(--bg); }
+.maplibregl-ctrl-attrib { display:none !important; }
+.maplibregl-ctrl-group {
+  border-radius:var(--r) !important; overflow:hidden;
+  border:1px solid var(--border) !important;
+  box-shadow:var(--shadow-sm) !important; background:var(--surface) !important;
+}
+.maplibregl-ctrl-group button {
+  width:32px !important; height:32px !important;
+  background:var(--surface) !important; color:var(--text-2) !important;
+}
+.maplibregl-ctrl-group button:hover { background:var(--surface-2) !important; }
+.maplibregl-ctrl-group button+button { border-top:1px solid var(--border) !important; }
+
+/* ── MARKER ── */
+.pin { width:24px; height:24px; position:relative; }
+.pin-wave {
+  position:absolute; inset:-8px; border-radius:50%;
+  border:2px solid var(--accent); opacity:0;
+  animation:wave-out 2.4s ease-out infinite;
+}
+.pin-wave:nth-child(2) { animation-delay:.8s; }
+.pin-ring {
+  position:absolute; inset:0; border-radius:50%;
+  border:2.5px solid var(--accent); background:var(--marker-ring);
+  animation:pop-in .3s var(--spring);
+}
+.pin-dot {
+  position:absolute; inset:6px; background:var(--accent);
+  border-radius:50%; box-shadow:0 0 8px var(--accent-glow);
+  animation:pop-in .3s var(--spring) .05s both;
+}
+@keyframes pop-in { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+@keyframes wave-out { 0%{transform:scale(.5);opacity:.5} 100%{transform:scale(2.2);opacity:0} }
+
+/* ── INSTRUCTION PILL ── */
+.instr-pill {
+  position:fixed; bottom:28px; left:50%;
+  transform:translateX(-50%);
+  background:var(--panel-bg);
+  backdrop-filter:blur(20px) saturate(1.4);
+  -webkit-backdrop-filter:blur(20px) saturate(1.4);
+  border:1px solid var(--border); border-radius:var(--r-pill);
+  padding:10px 20px; font-size:13px; color:var(--text-2);
+  z-index:100; display:flex; align-items:center; gap:9px;
+  box-shadow:var(--shadow-md); white-space:nowrap;
+  transition:opacity .3s;
+  animation:float 3.5s ease-in-out infinite;
+}
+@keyframes float {
+  0%,100%{transform:translateX(-50%) translateY(0)}
+  50%    {transform:translateX(-50%) translateY(-5px)}
+}
+.instr-pill .pulse {
+  width:7px; height:7px; background:var(--accent);
+  border-radius:50%; animation:pdot 2s ease-out infinite;
+}
+@keyframes pdot {
+  0%  {box-shadow:0 0 0 0 var(--accent-m)}
+  70% {box-shadow:0 0 0 7px transparent}
+  100%{box-shadow:0 0 0 0 transparent}
+}
+
+/* ── COORD PANEL ── */
+.coord-panel {
+  position:fixed; bottom:28px; left:50%;
+  transform:translateX(-50%) translateY(120px);
+  background:var(--panel-bg);
+  backdrop-filter:blur(24px) saturate(1.5);
+  -webkit-backdrop-filter:blur(24px) saturate(1.5);
+  border:1px solid var(--border); border-radius:var(--r-lg);
+  padding:14px 18px; display:flex; align-items:center; gap:14px;
+  z-index:100; box-shadow:var(--shadow-xl);
+  opacity:0; transition:transform .45s var(--spring),opacity .28s var(--ease);
+}
+.coord-panel::before {
+  content:''; position:absolute; top:0; left:16px; right:16px; height:1.5px;
+  background:linear-gradient(90deg,var(--accent),var(--accent-hi),transparent);
+  border-radius:1px; opacity:.6;
+}
+.coord-panel.visible { transform:translateX(-50%) translateY(0); opacity:1; }
+
+.cblock { min-width:84px; }
+.cblock-label { font-size:9.5px; text-transform:uppercase; letter-spacing:1.5px; color:var(--text-3); font-weight:600; margin-bottom:3px; }
+.cblock-val {
+  font-family:var(--mono); font-size:17px; font-weight:500;
+  color:var(--text); letter-spacing:-.4px; direction:ltr;
+  cursor:pointer; transition:color .15s;
+  border-radius:4px; padding:1px 3px; margin:-1px -3px;
+}
+.cblock-val:hover { color:var(--accent); }
+.csep { width:1px; height:36px; background:var(--border); flex-shrink:0; }
+
+.copy-btn {
+  height:36px; padding:0 18px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-hi));
+  color:#fff; border:none; border-radius:var(--r);
+  font-family:inherit; font-size:13px; font-weight:600;
+  cursor:pointer; display:flex; align-items:center; gap:7px;
+  transition:all var(--t) var(--ease); white-space:nowrap;
+  box-shadow:0 4px 14px var(--accent-m);
+}
+.copy-btn:hover { box-shadow:0 6px 22px var(--accent-glow); transform:translateY(-1px); filter:brightness(1.08); }
+.copy-btn:active { transform:scale(.96); }
+.copy-btn svg { width:14px; height:14px; flex-shrink:0; }
+.copy-btn.copied { background:linear-gradient(135deg,var(--green),#00d48a); box-shadow:0 4px 14px var(--green-s); }
+
+/* ── BADGE (live mouse coords) ── */
+.coords-badge {
+  position:fixed; top:70px; right:16px;
+  background:var(--panel-bg); backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--border); border-radius:var(--r);
+  padding:8px 12px; font-family:var(--mono); font-size:11.5px; color:var(--text-3);
+  z-index:100; opacity:0; transform:translateX(8px);
+  transition:opacity .3s,transform .3s var(--ease); pointer-events:none;
+}
+.coords-badge.show { opacity:1; transform:translateX(0); }
+.cb-row { display:flex; gap:6px; align-items:center; }
+.cb-label { color:var(--text-3); font-size:10px; text-transform:uppercase; letter-spacing:1px; }
+.cb-val { color:var(--accent); font-weight:500; }
+.cb-div { width:100%; height:1px; background:var(--border); margin:4px 0; }
+
+/* ── TOAST ── */
+.toast {
+  position:fixed; top:72px; left:50%;
+  transform:translateX(-50%) translateY(-16px) scale(.92);
+  background:var(--toast-bg); color:var(--toast-text);
+  padding:10px 20px; border-radius:var(--r-pill);
+  font-size:13px; font-weight:600; opacity:0; pointer-events:none;
+  transition:opacity .22s,transform .3s var(--spring);
+  z-index:600; box-shadow:var(--shadow-lg);
+  display:flex; align-items:center; gap:8px;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0) scale(1); }
+.toast svg { width:14px; height:14px; color:var(--green); flex-shrink:0; }
+
+/* ── RESPONSIVE ── */
+@media(max-width:700px) {
+  header { padding:0 12px; gap:8px; height:54px; }
+  .search-wrap { margin:0; max-width:none; }
+  .loc-label { display:none; }
+  .locate-btn { padding:0 10px; }
+  .coord-panel { width:calc(100% - 24px); flex-wrap:wrap; justify-content:center; gap:10px; padding:12px 14px; bottom:16px; }
+  .cblock-val { font-size:15px; }
+  .coords-badge { display:none; }
+  .instr-pill { font-size:12px; padding:9px 16px; bottom:16px; }
+}
+@media(max-width:420px) { .logo-text { display:none; } }
+</style>
+</head>
+<body data-lang="en">
+
+<div id="loader">
+  <div class="loader-icon">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M12 2v3m0 14v3m10-9h-3M5 12H2"/>
+    </svg>
+  </div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+  <div class="loader-text">Loading map…</div>
+</div>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 2v3m0 14v3m10-9h-3M5 12H2"/>
+      </svg>
+    </div>
+    <span class="logo-text">Coordinates <em>Finder</em></span>
+  </div>
+
+  <div class="search-wrap">
+    <div class="search-box" id="searchBox">
+      <svg class="s-icon" fill="none" viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <div class="s-spinner"></div>
+      <input type="text" id="searchInput" placeholder="Search any location…" autocomplete="off" spellcheck="false">
+      <button class="s-clear" onclick="clearSearch()" aria-label="Clear">✕</button>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+  </div>
+
+  <div class="hc">
+    <button class="locate-btn" id="locateBtn" onclick="detectLocation()">
+      <div class="loc-spin"></div>
+      <svg class="loc-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+      <span class="loc-label" id="locateLabel">My Location</span>
+    </button>
+
+    <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme">
+      <svg id="themeIcon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"></svg>
+    </button>
+
+    <div class="lang-wrap" id="langWrap">
+      <button class="icon-btn" onclick="toggleLang()" title="Language">
+        <span id="langFlag" style="font-size:18px;line-height:1">🌐</span>
+      </button>
+      <div class="lang-dd">
+        <div class="lang-item active" data-lang="en" onclick="setLang('en')"><span class="lf">🇬🇧</span>English</div>
+        <div class="lang-item" data-lang="ur" onclick="setLang('ur')"><span class="lf">🇵🇰</span>اردو</div>
+        <div class="lang-item" data-lang="ar" onclick="setLang('ar')"><span class="lf">🇸🇦</span>العربية</div>
+        <div class="lang-item" data-lang="fr" onclick="setLang('fr')"><span class="lf">🇫🇷</span>Français</div>
+        <div class="lang-item" data-lang="es" onclick="setLang('es')"><span class="lf">🇪🇸</span>Español</div>
+        <div class="lang-item" data-lang="zh" onclick="setLang('zh')"><span class="lf">🇨🇳</span>中文</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div id="map"></div>
+
+<div class="coords-badge" id="coordsBadge">
+  <div class="cb-row"><span class="cb-label">lat</span><span class="cb-val" id="badgeLat">—</span></div>
+  <div class="cb-div"></div>
+  <div class="cb-row"><span class="cb-label">lng</span><span class="cb-val" id="badgeLng">—</span></div>
+</div>
+
+<div class="instr-pill" id="instrPill">
+  <span class="pulse"></span>
+  <span id="instrText">Double-click anywhere to drop a pin</span>
+</div>
+
+<div class="coord-panel" id="coordPanel">
+  <div class="cblock">
+    <div class="cblock-label" id="latLabel">LAT</div>
+    <div class="cblock-val" id="latValue" title="Click to copy latitude">—</div>
+  </div>
+  <div class="csep"></div>
+  <div class="cblock">
+    <div class="cblock-label" id="lngLabel">LNG</div>
+    <div class="cblock-val" id="lngValue" title="Click to copy longitude">—</div>
+  </div>
+  <div class="csep"></div>
+  <button class="copy-btn" id="copyBtn" onclick="copyCoords()">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+    <span id="copyLabel">Copy</span>
+  </button>
+</div>
+
+<div class="toast" id="toast">
+  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+  <span id="toastText">Copied to clipboard</span>
+</div>
+
+<!-- MapLibre MUST be at the bottom so DOM is ready before script runs -->
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+// ══════════════════════════════════════════════
+//  TRANSLATIONS  — Urdu (ur) fully included
+// ══════════════════════════════════════════════
+const T = {
+  en: { search:'Search any location…', locate:'My Location', instr:'Double-click anywhere to drop a pin', lat:'LAT', lng:'LNG', copy:'Copy', copied:'Copied!', toast:'Copied to clipboard', searching:'Searching…', noResults:'No results found', fail:'Search failed — try again', geoNo:'Geolocation not supported.', geoFail:'Could not get location. Please allow access.', flag:'🌐', dir:'ltr', hlang:'en' },
+  ur: { search:'کوئی جگہ تلاش کریں…', locate:'میرا مقام', instr:'پن لگانے کے لیے کہیں بھی ڈبل کلک کریں', lat:'عرض بلد', lng:'طول بلد', copy:'کاپی کریں', copied:'کاپی ہو گیا!', toast:'کلپ بورڈ میں کاپی ہو گیا', searching:'تلاش جاری ہے…', noResults:'کوئی نتائج نہیں ملے', fail:'تلاش ناکام — دوبارہ کوشش کریں', geoNo:'مقام کا تعین دستیاب نہیں۔', geoFail:'مقام حاصل نہیں ہو سکا۔', flag:'🇵🇰', dir:'rtl', hlang:'ur' },
+  ar: { search:'ابحث عن موقع…', locate:'موقعي', instr:'انقر نقراً مزدوجاً لتحديد الإحداثيات', lat:'خط العرض', lng:'خط الطول', copy:'نسخ', copied:'تم النسخ!', toast:'تم نسخ الإحداثيات', searching:'جارٍ البحث…', noResults:'لا توجد نتائج', fail:'فشل البحث — حاول مجدداً', geoNo:'تحديد الموقع غير مدعوم.', geoFail:'تعذر الحصول على موقعك.', flag:'🇸🇦', dir:'rtl', hlang:'ar' },
+  fr: { search:'Rechercher un lieu…', locate:'Ma position', instr:"Double-cliquez n'importe où pour une épingle", lat:'LAT', lng:'LNG', copy:'Copier', copied:'Copié !', toast:'Copié dans le presse-papier', searching:'Recherche…', noResults:'Aucun résultat', fail:'Échec — réessayez', geoNo:'Géolocalisation non supportée.', geoFail:'Position introuvable.', flag:'🇫🇷', dir:'ltr', hlang:'fr' },
+  es: { search:'Buscar ubicación…', locate:'Mi ubicación', instr:'Doble clic para fijar coordenadas', lat:'LAT', lng:'LNG', copy:'Copiar', copied:'¡Copiado!', toast:'Copiado al portapapeles', searching:'Buscando…', noResults:'Sin resultados', fail:'Error — inténtalo de nuevo', geoNo:'Geolocalización no soportada.', geoFail:'No se pudo obtener la ubicación.', flag:'🇪🇸', dir:'ltr', hlang:'es' },
+  zh: { search:'搜索地点…', locate:'我的位置', instr:'双击地图任意位置获取坐标', lat:'纬度', lng:'经度', copy:'复制', copied:'已复制!', toast:'已复制到剪贴板', searching:'搜索中…', noResults:'未找到结果', fail:'搜索失败 — 请重试', geoNo:'不支持地理定位。', geoFail:'无法获取位置。', flag:'🇨🇳', dir:'ltr', hlang:'zh' }
+};
+let lang = 'en';
+
+function setLang(l) {
+  lang = l;
+  const t = T[l];
+  document.documentElement.lang = t.hlang;
+  document.documentElement.dir = t.dir;
+  document.body.dataset.lang = l;
+  document.getElementById('searchInput').placeholder = t.search;
+  document.getElementById('locateLabel').textContent = t.locate;
+  document.getElementById('instrText').textContent = t.instr;
+  document.getElementById('latLabel').textContent = t.lat;
+  document.getElementById('lngLabel').textContent = t.lng;
+  document.getElementById('copyLabel').textContent = t.copy;
+  document.getElementById('langFlag').textContent = t.flag;
+  document.querySelectorAll('.lang-item').forEach(el => el.classList.toggle('active', el.dataset.lang === l));
+  document.getElementById('langWrap').classList.remove('open');
+}
+function toggleLang() { document.getElementById('langWrap').classList.toggle('open'); }
+
+// ══════════════════════════════════════════════
+//  THEME
+// ══════════════════════════════════════════════
+let theme = window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light';
+document.documentElement.dataset.theme = theme;
+
+function updateThemeIcon() {
+  document.getElementById('themeIcon').innerHTML = theme === 'dark'
+    ? '<circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2m-9-11h2m18 0h2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M4.22 19.78l1.42-1.42M17.36 6.64l1.42-1.42"/>'
+    : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+}
+updateThemeIcon();
+
+function toggleTheme() {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = theme;
+  updateThemeIcon();
+  setTimeout(updateMapStyle, 30);
+}
+
+// ══════════════════════════════════════════════
+//  MAP STYLES
+// ══════════════════════════════════════════════
+const OSM_LIGHT = {
+  version:8,
+  glyphs:'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+  sources:{ osm:{ type:'raster', tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize:256 }},
+  layers:[{ id:'osm', type:'raster', source:'osm' }]
+};
+const CARTO_DARK = {
+  version:8,
+  glyphs:'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+  sources:{ carto:{ type:'raster', tiles:['https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'], tileSize:256 }},
+  layers:[{ id:'carto', type:'raster', source:'carto' }]
+};
+
+let map, currentMarker = null, currentLat = null, currentLng = null;
+
+function initMap() {
+  map = new maplibregl.Map({
+    container: 'map',
+    style: theme === 'dark' ? CARTO_DARK : OSM_LIGHT,
+    center: [55.2708, 25.2048],
+    zoom: 2.5,
+    projection: 'globe',
+    doubleClickZoom: false,
+    fadeDuration: 300,
+    maxPitch: 60,
+    attributionControl: false,
+  });
+
+  map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'bottom-right');
+  map.addControl(new maplibregl.ScaleControl({ maxWidth: 100, unit: 'metric' }), 'bottom-left');
+
+  map.on('load', () => {
+    const loader = document.getElementById('loader');
+    loader.classList.add('gone');
+    setTimeout(() => { loader.style.display = 'none'; }, 450);
+  });
+
+  map.on('dblclick', (e) => placeMarker(e.lngLat.lat, e.lngLat.lng));
+
+  map.on('mousemove', (e) => {
+    document.getElementById('coordsBadge').classList.add('show');
+    document.getElementById('badgeLat').textContent = e.lngLat.lat.toFixed(5);
+    document.getElementById('badgeLng').textContent = e.lngLat.lng.toFixed(5);
+  });
+
+  map.on('mouseleave', () => {
+    document.getElementById('coordsBadge').classList.remove('show');
+  });
+}
+
+function updateMapStyle() {
+  if (!map) return;
+  const center = map.getCenter(), zoom = map.getZoom();
+  map.setStyle(theme === 'dark' ? CARTO_DARK : OSM_LIGHT);
+  map.once('styledata', () => {
+    map.jumpTo({ center, zoom });
+    if (currentMarker) { currentMarker.remove(); currentMarker = null; }
+    if (currentLat !== null) addMarker(parseFloat(currentLat), parseFloat(currentLng));
+  });
+}
+
+function addMarker(lat, lng) {
+  if (currentMarker) currentMarker.remove();
+  const el = document.createElement('div');
+  el.className = 'pin';
+  el.innerHTML = '<div class="pin-wave"></div><div class="pin-wave"></div><div class="pin-ring"></div><div class="pin-dot"></div>';
+  currentMarker = new maplibregl.Marker({ element: el, anchor: 'center' })
+    .setLngLat([lng, lat]).addTo(map);
+}
+
+function placeMarker(lat, lng) {
+  addMarker(lat, lng);
+  currentLat = lat.toFixed(6);
+  currentLng = lng.toFixed(6);
+  document.getElementById('latValue').textContent = currentLat;
+  document.getElementById('lngValue').textContent = currentLng;
+  document.getElementById('coordPanel').classList.add('visible');
+  const pill = document.getElementById('instrPill');
+  pill.style.opacity = '0';
+  setTimeout(() => pill.style.display = 'none', 320);
+  // Auto-copy silently on drop
+  navigator.clipboard.writeText(currentLat + ', ' + currentLng).then(showToast).catch(() => {});
+}
+
+// ══════════════════════════════════════════════
+//  COPY
+// ══════════════════════════════════════════════
+function copyCoords() {
+  if (!currentLat) return;
+  const text = currentLat + ', ' + currentLng;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast();
+    const btn = document.getElementById('copyBtn');
+    btn.classList.add('copied');
+    btn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg><span>${T[lang].copied}</span>`;
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span id="copyLabel">${T[lang].copy}</span>`;
+    }, 1800);
+  }).catch(() => prompt('Copy coordinates:', text));
+}
+
+function showToast() {
+  const t = document.getElementById('toast');
+  document.getElementById('toastText').textContent = T[lang].toast;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+document.getElementById('latValue').onclick = () => {
+  if (currentLat) navigator.clipboard.writeText(currentLat).then(showToast);
+};
+document.getElementById('lngValue').onclick = () => {
+  if (currentLng) navigator.clipboard.writeText(currentLng).then(showToast);
+};
+
+// ══════════════════════════════════════════════
+//  GEOLOCATION
+// ══════════════════════════════════════════════
+function detectLocation() {
+  if (!navigator.geolocation) { alert(T[lang].geoNo); return; }
+  const btn = document.getElementById('locateBtn');
+  btn.classList.add('loading');
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      btn.classList.remove('loading');
+      map.flyTo({ center:[pos.coords.longitude, pos.coords.latitude], zoom:15, duration:1800, essential:true });
+      setTimeout(() => placeMarker(pos.coords.latitude, pos.coords.longitude), 800);
+    },
+    () => { btn.classList.remove('loading'); alert(T[lang].geoFail); },
+    { enableHighAccuracy:true, timeout:10000 }
+  );
+}
+
+// ══════════════════════════════════════════════
+//  SEARCH  — 500ms debounce, Nominatim
+// ══════════════════════════════════════════════
+const sInput  = document.getElementById('searchInput');
+const sBox    = document.getElementById('searchBox');
+const sResult = document.getElementById('searchResults');
+let sTimer = null;
+
+sInput.addEventListener('input', function() {
+  clearTimeout(sTimer);
+  const q = this.value.trim();
+  sBox.classList.toggle('has-val', q.length > 0);
+  if (q.length < 2) { sResult.classList.remove('open'); sBox.classList.remove('loading'); return; }
+
+  sBox.classList.add('loading');
+  sResult.innerHTML = '<div class="sr-msg">' + T[lang].searching + '</div>';
+  sResult.classList.add('open');
+
+  sTimer = setTimeout(() => {
+    fetch('https://nominatim.openstreetmap.org/search?format=json&limit=6&accept-language=' + lang + '&q=' + encodeURIComponent(q))
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(data => {
+        sBox.classList.remove('loading');
+        if (!data.length) { sResult.innerHTML = '<div class="sr-msg">' + T[lang].noResults + '</div>'; return; }
+        sResult.innerHTML = data.map(d => {
+          const parts = d.display_name.split(',');
+          const primary = parts[0].trim();
+          const sub = parts.slice(1, 3).join(',').trim();
+          return `<div class="sr-item" data-lat="${d.lat}" data-lng="${d.lon}" tabindex="0">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div><strong>${primary}</strong>${sub ? '<span class="sr-sub">'+sub+'</span>' : ''}</div>
+          </div>`;
+        }).join('');
+
+        sResult.querySelectorAll('.sr-item').forEach(el => {
+          const go = () => {
+            const lat = parseFloat(el.dataset.lat), lng = parseFloat(el.dataset.lng);
+            map.flyTo({ center:[lng, lat], zoom:15, duration:1400 });
+            setTimeout(() => placeMarker(lat, lng), 500);
+            sResult.classList.remove('open');
+            sInput.value = el.querySelector('strong').textContent;
+            sBox.classList.add('has-val');
+          };
+          el.addEventListener('click', go);
+          el.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+        });
+      })
+      .catch(() => { sBox.classList.remove('loading'); sResult.innerHTML = '<div class="sr-msg">' + T[lang].fail + '</div>'; });
+  }, 500);
+});
+
+sInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter')     { const f = sResult.querySelector('.sr-item'); if (f) f.click(); }
+  if (e.key === 'Escape')    { sResult.classList.remove('open'); sInput.blur(); }
+  if (e.key === 'ArrowDown') { e.preventDefault(); const f = sResult.querySelector('.sr-item'); if (f) f.focus(); }
+});
+
+sResult.addEventListener('keydown', e => {
+  const items = [...sResult.querySelectorAll('.sr-item')];
+  const idx = items.indexOf(document.activeElement);
+  if (e.key === 'ArrowDown' && idx < items.length-1) { e.preventDefault(); items[idx+1].focus(); }
+  if (e.key === 'ArrowUp')  { e.preventDefault(); idx <= 0 ? sInput.focus() : items[idx-1].focus(); }
+  if (e.key === 'Escape')   { sResult.classList.remove('open'); sInput.focus(); }
+});
+
+function clearSearch() {
+  sInput.value = ''; sBox.classList.remove('has-val','loading');
+  sResult.classList.remove('open'); clearTimeout(sTimer); sInput.focus();
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap')) sResult.classList.remove('open');
+  if (!e.target.closest('.lang-wrap'))   document.getElementById('langWrap').classList.remove('open');
+});
+
+// ══════════════════════════════════════════════
+//  BOOT  — poll until maplibregl is defined
+// ══════════════════════════════════════════════
+(function boot() {
+  if (typeof maplibregl !== 'undefined') {
+    initMap();
+  } else {
+    setTimeout(boot, 50);
+  }
+})();
+</script>
+</body>
+</html>

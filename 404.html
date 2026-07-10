@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'>
 <title>404</title>
+<link rel="icon" type="image/x-icon" href="https://i.ibb.co/s9sFBpJX/favicon-32x32.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}body{background:radial-gradient(circle at top,#1b1b1b,#080808 65%);font-family:Inter,sans-serif;color:#fff;overflow:hidden}
 canvas{position:fixed;inset:0}.container{position:relative;z-index:2;height:100vh;display:flex;justify-content:center;align-items:center;text-align:center;padding:40px}.box{max-width:760px}
 #logo{width:340px;max-width:90%;margin:0 auto 45px;display:block;opacity:0;transform:translateY(-25px) scale(.95);animation:logo 1.5s ease forwards}
 @keyframes logo{to{opacity:1;transform:none}}
-#message{font-size:42px;font-weight:700;opacity:0;transform:translateY(25px);transition:.8s;min-height:60px}.show{opacity:1!important;transform:none!important}.hide{opacity:0!important;transform:translateY(-25px)!important}
-#final{opacity:0;transform:scale(.9);transition:1s}#final.show{opacity:1;transform:scale(1)}h1{font-size:110px}a{display:inline-block;margin-top:25px;padding:16px 30px;background:#fff;color:#111;text-decoration:none;border-radius:14px}
+#message{font-size:42px;font-weight:700;opacity:0;transform:translateY(25px);transition:.8s;min-height:60px}.show{opacity:1!important;transform:none!important}.hide{opacity:0!important;transform:t[...]
+#final{opacity:0;transform:scale(.9);transition:1s}#final.show{opacity:1;transform:scale(1)}h1{font-size:110px}a{display:inline-block;margin-top:25px;padding:16px 30px;background:#fff;color:#111;t[...]
 </style></head><body>
 <canvas id='bg'></canvas><div class='container'><div class='box'>
 <img src="https://i.ibb.co/Jhsfrd4/PIXLECT-Studios-1-removebg-preview.png" alt="PIXLECT Studios 1 removebg preview" border="0">
@@ -16,6 +17,6 @@ canvas{position:fixed;inset:0}.container{position:relative;z-index:2;height:100v
 <div id='final'><h1>404</h1><p>...<br><br>Click below to go home.</p><a href='https://www.pixlect-studios.com'>www.pixlect-studios.com</a></div>
 </div></div>
 <script>
-const c=bg,x=c.getContext('2d');function rs(){c.width=innerWidth;c.height=innerHeight}rs();onresize=rs;let st=[...Array(120)].map(()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*2,v:.2+Math.random()*.6}));(function a(){x.clearRect(0,0,c.width,c.height);x.fillStyle='#fff';for(let s of st){x.globalAlpha=.3;x.beginPath();x.arc(s.x,s.y,s.r,0,7);x.fill();s.y+=s.v;if(s.y>c.height){s.y=0;s.x=Math.random()*c.width}}requestAnimationFrame(a)})();
-const msgs=["Hmm...","Loading...","Yes...","I think I got the connection...","And...","No...","Wrong Site, Bud."],m=message,f=final;let i=0;function n(){if(i<msgs.length){m.className='hide';setTimeout(()=>{m.textContent=msgs[i++];m.className='show';setTimeout(n,1500)},450)}else{m.style.display='none';f.classList.add('show')}}setTimeout(n,1000);
+const c=bg,x=c.getContext('2d');function rs(){c.width=innerWidth;c.height=innerHeight}rs();onresize=rs;let st=[...Array(120)].map(()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.rand[...]
+const msgs=["Hmm...","Loading...","Yes...","I think I got the connection...","And...","No...","Wrong Site, Bud."],m=message,f=final;let i=0;function n(){if(i<msgs.length){m.className='hide';setTim[...]
 </script></body></html>
